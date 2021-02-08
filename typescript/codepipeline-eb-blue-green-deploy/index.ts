@@ -31,20 +31,8 @@ export class PipelineStack extends cdk.Stack {
             actions: [sourceAction],
         });
 
-        const buildAction = new codepipeline_actions.CodeBuildAction({
-            actionName: 'CodeBuild',
-            project,
-            input: sourceOutput, // The build action must use the CodeCommitSourceAction output as input.
-            outputs: [new codepipeline.Artifact()], // optional
-        });
-
-        pipeline.addStage({
-            stageName: 'build',
-            actions: [buildAction],
-        });
-
 		/**
-		 * approval flow
+		 * approval action
 		 */
 		const approvalAction = new codepipeline_actions.ManualApprovalAction({
 			actionName: 'DeployApprovalAction',
@@ -52,9 +40,21 @@ export class PipelineStack extends cdk.Stack {
 			externalEntityLink: sourceAction.variables.commitUrl,
 		});
 
+		/**
+		 * deploy action
+		 */
+		const buildAction = new codepipeline_actions.CodeBuildAction({
+            actionName: 'CodeBuild',
+            project,
+            input: sourceOutput, // The build action must use the CodeCommitSourceAction output as input.
+            outputs: [new codepipeline.Artifact()], // optional
+			runOrder: 3
+        });
+
+
 		pipeline.addStage({
-            stageName: 'approved',
-            actions: [approvalAction],
+            stageName: 'approveAndBuild',
+            actions: [approvalAction, buildAction],
         });
     }
 }
