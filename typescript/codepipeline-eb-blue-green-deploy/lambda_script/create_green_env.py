@@ -1,21 +1,18 @@
-import boto3
 import json
-import traceback
-import sys
 from logging import getLogger, INFO
-import threading
-import time
+import sys
+import traceback
+import boto3
+
+from .utils import put_job_success, put_job_failure
 
 logger = getLogger(__name__)
 logger.setLevel(INFO)
 
 beanstalkclient = boto3.client('elasticbeanstalk')
-codepipelineclient = boto3.client('codepipeline')
 
 
-def handler(event, context):
-	timer = threading.Timer((context.get_remaining_time_in_millis() / 1000.00) - 0.5, timeout, args=[event, context])
-	timer.start()
+def handler(event, _):
 
 	# Extract the Job ID
 	status = "Failure"
@@ -71,15 +68,15 @@ def handler(event, context):
 			else:
 				status = "Failure"
 				message = "Something went wrong on GreenEnv Creation"
-	except Exception as e:
+	except Exception as error:
 		logger.info('Function failed due to exception.')
+		logger.info(error)
 		e = sys.exc_info()[0]
 		logger.info(e)
 		traceback.print_exc()
 		status = "Failure"
 		message = "Error occurred while executing this. The error is %s" % e
 	finally:
-		timer.cancel()
 		if status == "Success":
 			put_job_success(job_id, message)
 		else:
@@ -157,20 +154,3 @@ def create_green_environment(
 		TemplateName=template_name,
 		VersionLabel=application_version)
 	return response['EnvironmentId']
-
-
-def timeout(event, _):
-	logger.error('Execution is about to time out, sending failure response to CodePipeline')
-	put_job_failure(event['CodePipeline.job']['id'], "FunctionTimeOut")
-
-
-def put_job_success(job, message):
-	logger.info('Putting job success')
-	logger.info(message)
-	codepipelineclient.put_job_success_result(jobId=job)
-
-
-def put_job_failure(job, message):
-	logger.info('Putting job failure')
-	logger.info(message)
-	codepipelineclient.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
