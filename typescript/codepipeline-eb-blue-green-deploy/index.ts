@@ -2,8 +2,10 @@ import * as cdk from "@aws-cdk/core";
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as codebuild from '@aws-cdk/aws-codebuild';
+import * as lambda from '@aws-cdk/aws-lambda';
 
 import { getParams } from './params';
+import { Duration } from "@aws-cdk/core";
 
 export class PipelineStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -31,12 +33,28 @@ export class PipelineStack extends cdk.Stack {
             actions: [sourceAction],
         });
 
+		const lambdaCreateGreenEnv = new lambda.Function(this, 'createGreenEnv', {
+			handler: 'create_green_env.handler',
+			runtime: lambda.Runtime.PYTHON_3_8,
+			code: lambda.Code.fromAsset('./lambda_script'),
+			timeout: Duration.seconds(120),
+		})
+		const createGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
+			actionName: 'CreateGreenEnvironment',
+			lambda: lambdaCreateGreenEnv
+		})
+
+		pipeline.addStage({
+            stageName: 'CreateGreenEnvironmentStage',
+            actions: [createGreenEnvAction],
+        });
+
 		/**
 		 * approval action
 		 */
 		const approvalAction = new codepipeline_actions.ManualApprovalAction({
 			actionName: 'DeployApprovalAction',
-			runOrder: 2,
+			runOrder: 1,
 			externalEntityLink: sourceAction.variables.commitUrl,
 		});
 
@@ -48,7 +66,7 @@ export class PipelineStack extends cdk.Stack {
             project,
             input: sourceOutput, // The build action must use the CodeCommitSourceAction output as input.
             outputs: [new codepipeline.Artifact()], // optional
-			runOrder: 3
+			runOrder: 2
         });
 
 
