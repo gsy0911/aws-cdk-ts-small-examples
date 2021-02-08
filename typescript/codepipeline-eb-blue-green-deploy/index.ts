@@ -33,6 +33,9 @@ export class PipelineStack extends cdk.Stack {
             actions: [sourceAction],
         });
 
+		/**
+		 * lambda to create green environment
+		 */
 		const lambdaCreateGreenEnv = new lambda.Function(this, 'createGreenEnv', {
 			handler: 'create_green_env.handler',
 			runtime: lambda.Runtime.PYTHON_3_8,
@@ -74,6 +77,27 @@ export class PipelineStack extends cdk.Stack {
             stageName: 'approveAndBuild',
             actions: [approvalAction, buildAction],
         });
+
+
+		/**
+		 * lambda to create green environment
+		 */
+		const lambdaTerminateGreenEnv = new lambda.Function(this, 'terminteGreenEnv', {
+			handler: 'terminate_green_env.handler',
+			runtime: lambda.Runtime.PYTHON_3_8,
+			code: lambda.Code.fromAsset('./lambda_script'),
+			timeout: Duration.seconds(120),
+		})
+		const terminateGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
+			actionName: 'TerminateGreenEnvironment',
+			lambda: lambdaTerminateGreenEnv
+		})
+
+		pipeline.addStage({
+            stageName: 'TerminateGreenEnvironmentStage',
+            actions: [terminateGreenEnvAction],
+        });
+
     }
 }
 
