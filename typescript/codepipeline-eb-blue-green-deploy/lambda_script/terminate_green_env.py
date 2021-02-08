@@ -3,122 +3,122 @@ import json
 import traceback
 import time
 import sys
-import logging
+from logging import getLogger, INFO
 import threading
 
+from .utils import put_job_success, put_job_failure, timeout
+
+
 beanstalkclient = boto3.client('elasticbeanstalk')
-codepipelineclient = boto3.client('codepipeline')
+logger = getLogger(__name__)
+logger.setLevel(INFO)
 
 
 def handler(event, context):
 	# make sure we send a failure to CodePipeline if the function is going to timeout
 	timer = threading.Timer((context.get_remaining_time_in_millis() / 1000.00) - 0.5, timeout, args=[event, context])
 	timer.start()
+
+	status = "Failure"
+	message = "failed"
+	# Extract the Job ID
+	job_id = event['CodePipeline.job']['id']
 	try:
-		# Extract the Job ID
-		job_id = event['CodePipeline.job']['id']
 		# Extract the Job Data
 		job_data = event['CodePipeline.job']['data']
 		user_parameters = job_data['actionConfiguration']['configuration']['UserParameters']
 		# Calling DeleteConfigTemplate API
-		DeleteConfigTemplate = DeleteConfigTemplateBlue(AppName=(json.loads(user_parameters)['BeanstalkAppName']),
-														TempName=(json.loads(user_parameters)['CreateConfigTempName']))
-		print(DeleteConfigTemplate)
+		delete_config_template = delete_config_template_blue(
+			application_name=(json.loads(user_parameters)['BeanstalkAppName']),
+			template_name=(json.loads(user_parameters)['CreateConfigTempName']))
+		logger.info(delete_config_template)
 		# re-swapping the urls
-		reswap = SwapGreenandBlue(SourceEnv=(json.loads(user_parameters)['BlueEnvName']),
-								  DestEnv=(json.loads(user_parameters)['GreenEnvName']))
+		reswap = swap_green_and_blue(
+			src_environment=(json.loads(user_parameters)['BlueEnvName']),
+			dst_environment=(json.loads(user_parameters)['GreenEnvName']))
 		if reswap == "Failure":
 			raise Exception("Re-Swap did not happen")
-		print("Deleting the GreenEnvironment")
-		DeleteGreenEnvironment(EnvName=(json.loads(user_parameters)['GreenEnvName']))
+		logger.info("Deleting the GreenEnvironment")
+		delete_green_environment(environment_name=(json.loads(user_parameters)['GreenEnvName']))
 		# Delete the S3 CNAME Config file
 		s3 = boto3.resource('s3')
 		bucket = s3.Bucket(json.loads(user_parameters)['BlueCNAMEConfigBucket'])
 		key = 'hello.json'
 		objs = list(bucket.objects.filter(Prefix=key))
 		if len(objs) > 0 and objs[0].key == key:
-			obj = s3.Object(json.loads(user_parameters)['BlueCNAMEConfigBucket'],
-							json.loads(user_parameters)['BlueCNAMEConfigFile'])
+			obj = s3.Object(
+				json.loads(user_parameters)['BlueCNAMEConfigBucket'],
+				json.loads(user_parameters)['BlueCNAMEConfigFile'])
 			obj.delete()
-			print("Successfully deleted the CNAME Config file")
+			logger.info("Successfully deleted the CNAME Config file")
 		else:
-			print("Seems like the CNAME Config file is already deleted!")
+			logger.info("Seems like the CNAME Config file is already deleted!")
 		# Send Success Message to CodePipeline
-		Status = "Success"
-		Message = "Successfully reswapped and terminated the Green Environment"
+		status = "Success"
+		message = "Successfully reswapped and terminated the Green Environment"
 
 	except Exception as e:
-		print('Function failed due to exception.')
+		logger.info('Function failed due to exception.')
+		logger.info(e)
 		e = sys.exc_info()[0]
-		print(e)
+		logger.info(e)
 		traceback.print_exc()
-		Status = "Failure"
-		Message = ("Error occured while executing this. The error is %s" % e)
+		status = "Failure"
+		message = ("Error occured while executing this. The error is %s" % e)
 
 	finally:
 		timer.cancel()
-		if (Status == "Success"):
-			put_job_success(job_id, Message)
+		if status == "Success":
+			put_job_success(job_id, message)
 		else:
-			put_job_failure(job_id, Message)
+			put_job_failure(job_id, message)
 
 
-def DeleteConfigTemplateBlue(AppName, TempName):
+def delete_config_template_blue(application_name: str, template_name: str):
 	# check if the config template exists
-	ListTemplates = beanstalkclient.describe_applications(ApplicationNames=[AppName])['Applications'][0][
+	template_list = beanstalkclient.describe_applications(ApplicationNames=[application_name])['Applications'][0][
 		'ConfigurationTemplates']
-	if TempName not in ListTemplates:
-		return ("Config Template does not exist")
+	if template_name not in template_list:
+		return "Config Template does not exist"
 	else:
-		response = beanstalkclient.delete_configuration_template(ApplicationName=AppName, TemplateName=TempName)
-		return ("Config Template Deleted")
+		response = beanstalkclient.delete_configuration_template(
+			ApplicationName=application_name,
+			TemplateName=template_name)
+		logger.info(response)
+		return "Config Template Deleted"
 
 
-def SwapGreenandBlue(SourceEnv, DestEnv):
-	GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[SourceEnv, DestEnv], IncludeDeleted=False))
-	print(GetEnvData)
-	if (((GetEnvData['Environments'][0]['Status']) == "Ready") and (
-		(GetEnvData['Environments'][1]['Status']) == "Ready")):
-		response = beanstalkclient.swap_environment_cnames(SourceEnvironmentName=SourceEnv,
-														   DestinationEnvironmentName=DestEnv)
-		return ("Successful")
+def swap_green_and_blue(src_environment: str, dst_environment: str) -> str:
+	env_data = (beanstalkclient.describe_environments(
+		EnvironmentNames=[src_environment, dst_environment],
+		IncludeDeleted=False))
+	logger.info(env_data)
+	if (((env_data['Environments'][0]['Status']) == "Ready") and (
+		(env_data['Environments'][1]['Status']) == "Ready")):
+		response = beanstalkclient.swap_environment_cnames(
+			SourceEnvironmentName=src_environment,
+			DestinationEnvironmentName=dst_environment)
+		logger.info(response)
+		return "Success"
 	else:
-		return ("Failure")
+		return "Failure"
 
 
-def DeleteGreenEnvironment(EnvName):
-	GetEnvData = (beanstalkclient.describe_environments(EnvironmentNames=[EnvName]))
-	print(GetEnvData)
-	# print (B['Environments'][0]['Status'])
-	InvalidStatus = ["Terminating", "Terminated"]
-	if not (GetEnvData['Environments'] == []):
+def delete_green_environment(environment_name):
+	env_data = beanstalkclient.describe_environments(EnvironmentNames=[environment_name])
+	logger.info(env_data)
+	invalid_status = ["Terminating", "Terminated"]
+	if not (env_data['Environments'] == []):
 		# if not(B['Environments'][0]['Status']=="Terminated"): #or not(B['Environments'][0]['Status']=="Terminating")):
-		if (GetEnvData['Environments'][0]['Status']) in InvalidStatus:
-			return ("Already Terminated")
+		if (env_data['Environments'][0]['Status']) in invalid_status:
+			return "Already Terminated"
 	while True:
-		GreenEnvStatus = (beanstalkclient.describe_environments(EnvironmentNames=[EnvName]))['Environments'][0][
+		green_env_status = (beanstalkclient.describe_environments(EnvironmentNames=[environment_name]))['Environments'][0][
 			'Status']
-		print(GreenEnvStatus)
+		logger.info(green_env_status)
 		time.sleep(10)
-		if (GreenEnvStatus == 'Ready'):
-			response = beanstalkclient.terminate_environment(EnvironmentName=EnvName)
-			print(response)
-			print("Successfully Terminated Green Environment")
+		if green_env_status == 'Ready':
+			response = beanstalkclient.terminate_environment(EnvironmentName=environment_name)
+			logger.info(response)
+			logger.info("Successfully Terminated Green Environment")
 			return
-
-
-def timeout(event, context):
-	logging.error('Execution is about to time out, sending failure response to CodePipeline')
-	put_job_failure(event['CodePipeline.job']['id'], "FunctionTimeOut")
-
-
-def put_job_success(job, message):
-	print('Putting job success')
-	print(message)
-	codepipelineclient.put_job_success_result(jobId=job)
-
-
-def put_job_failure(job, message):
-	print('Putting job failure')
-	print(message)
-	codepipelineclient.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
