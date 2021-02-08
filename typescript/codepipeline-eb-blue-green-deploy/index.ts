@@ -15,15 +15,23 @@ export class PipelineStack extends cdk.Stack {
 		const params = getParams()
         const project = new codebuild.PipelineProject(this, 'MyProject');
 
-        // S3の場所
+        // S3 location
         const sourceOutput = new codepipeline.Artifact();
-        const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSSM);
+        const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
+		// const oauth = cdk.SecretValue.plainText('')
+		// const gitHubRepository = new codestar.GitHubRepository(this, 'GitHubRepo', {
+		// 	owner: params.gitOwner,
+		// 	repositoryName: params.gitRepoName,
+		// 	accessToken: oauth,
+		// 	contentsBucket: s3.Bucket.fromBucketName(this, 'Bucket', sourceOutput.s3Location.bucketName),
+		// 	contentsKey: 'source.zip',
+		// })
+
         const sourceAction = new codepipeline_actions.GitHubSourceAction({
             actionName: 'GitHub_Source',
             owner: params.gitOwner,
             repo: params.gitRepoName,
             oauthToken: oauth,
-            trigger: codepipeline_actions.GitHubTrigger.POLL,
             output: sourceOutput,
             branch: params.gitSourceBranch || 'master',
         });
@@ -39,10 +47,11 @@ export class PipelineStack extends cdk.Stack {
             outputs: [new codepipeline.Artifact()], // optional
         });
 
-        const buildStage = pipeline.addStage({
+        pipeline.addStage({
             stageName: 'build',
             actions: [buildAction],
         });
+
     }
 }
 
