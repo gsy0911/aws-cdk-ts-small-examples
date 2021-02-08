@@ -18,15 +18,6 @@ export class PipelineStack extends cdk.Stack {
         // S3 location
         const sourceOutput = new codepipeline.Artifact();
         const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
-		// const oauth = cdk.SecretValue.plainText('')
-		// const gitHubRepository = new codestar.GitHubRepository(this, 'GitHubRepo', {
-		// 	owner: params.gitOwner,
-		// 	repositoryName: params.gitRepoName,
-		// 	accessToken: oauth,
-		// 	contentsBucket: s3.Bucket.fromBucketName(this, 'Bucket', sourceOutput.s3Location.bucketName),
-		// 	contentsKey: 'source.zip',
-		// })
-
         const sourceAction = new codepipeline_actions.GitHubSourceAction({
             actionName: 'GitHub_Source',
             owner: params.gitOwner,
@@ -52,6 +43,19 @@ export class PipelineStack extends cdk.Stack {
             actions: [buildAction],
         });
 
+		/**
+		 * approval flow
+		 */
+		const approvalAction = new codepipeline_actions.ManualApprovalAction({
+			actionName: 'DeployApprovalAction',
+			runOrder: 2,
+			externalEntityLink: sourceAction.variables.commitUrl,
+		});
+
+		pipeline.addStage({
+            stageName: 'approved',
+            actions: [approvalAction],
+        });
     }
 }
 
