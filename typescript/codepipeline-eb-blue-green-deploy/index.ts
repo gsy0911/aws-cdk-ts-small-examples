@@ -15,7 +15,17 @@ export class PipelineStack extends cdk.Stack {
             pipelineName: "MyPipeline"
         });
 		const params = getParams()
-        const project = new codebuild.PipelineProject(this, 'MyProject');
+        const project = new codebuild.PipelineProject(this, 'MyProject', {
+			environment: {
+				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2
+			},
+			environmentVariables: {
+				"AWS_ACCOUNT": {
+					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					value: params.awsAccountId,
+				}
+			}
+		});
 
         // S3 location
         const sourceOutput = new codepipeline.Artifact();
@@ -31,25 +41,6 @@ export class PipelineStack extends cdk.Stack {
         pipeline.addStage({
             stageName: 'Source',
             actions: [sourceAction],
-        });
-
-		/**
-		 * lambda to create green environment
-		 */
-		const lambdaCreateGreenEnv = new lambda.Function(this, 'createGreenEnv', {
-			handler: 'create_green_env.handler',
-			runtime: lambda.Runtime.PYTHON_3_8,
-			code: lambda.Code.fromAsset('./lambda_script'),
-			timeout: Duration.seconds(120),
-		})
-		const createGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
-			actionName: 'CreateGreenEnvironment',
-			lambda: lambdaCreateGreenEnv
-		})
-
-		pipeline.addStage({
-            stageName: 'CreateGreenEnvironmentStage',
-            actions: [createGreenEnvAction],
         });
 
 		/**
@@ -81,6 +72,25 @@ export class PipelineStack extends cdk.Stack {
 
 		/**
 		 * lambda to create green environment
+		 */
+		const lambdaCreateGreenEnv = new lambda.Function(this, 'createGreenEnv', {
+			handler: 'create_green_env.handler',
+			runtime: lambda.Runtime.PYTHON_3_8,
+			code: lambda.Code.fromAsset('./lambda_script'),
+			timeout: Duration.seconds(120),
+		})
+		const createGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
+			actionName: 'CreateGreenEnvironment',
+			lambda: lambdaCreateGreenEnv
+		})
+
+		pipeline.addStage({
+            stageName: 'CreateGreenEnvironmentStage',
+            actions: [createGreenEnvAction],
+        });
+
+		/**
+		 * lambda to swap environments
 		 */
 		const lambdaTerminateGreenEnv = new lambda.Function(this, 'terminteGreenEnv', {
 			handler: 'terminate_green_env.handler',
