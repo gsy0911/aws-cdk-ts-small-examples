@@ -3,6 +3,7 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as lambda from '@aws-cdk/aws-lambda';
+import * as iam from '@aws-cdk/aws-iam';
 
 import { getParams } from './params';
 import { Duration } from "@aws-cdk/core";
@@ -15,6 +16,11 @@ export class PipelineStack extends cdk.Stack {
             pipelineName: "MyPipeline"
         });
 		const params = getParams()
+
+		const buildRole = new iam.Role(this, 'BuildRole', {
+			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
+		})
+		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser'))
         const project = new codebuild.PipelineProject(this, 'MyProject', {
 			environment: {
 				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2
@@ -24,7 +30,8 @@ export class PipelineStack extends cdk.Stack {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.awsAccountId,
 				}
-			}
+			},
+			role: buildRole
 		});
 
         // S3 location
