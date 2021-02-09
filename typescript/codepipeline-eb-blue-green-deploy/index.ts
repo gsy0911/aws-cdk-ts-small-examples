@@ -20,10 +20,13 @@ export class PipelineStack extends cdk.Stack {
 		const buildRole = new iam.Role(this, 'BuildRole', {
 			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
 		})
-		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser'))
+		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
+
+		// to build docker in CodeBuild, set priviledged True
         const project = new codebuild.PipelineProject(this, 'MyProject', {
 			environment: {
-				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2
+				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2,
+				privileged: true
 			},
 			environmentVariables: {
 				"AWS_ACCOUNT": {
