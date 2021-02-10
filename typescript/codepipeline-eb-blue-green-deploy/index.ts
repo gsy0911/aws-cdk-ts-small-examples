@@ -42,11 +42,11 @@ export class PipelineStack extends cdk.Stack {
 		 * lambda returns '2021-01-01'.
 		 */
 		const lambdaCurrentDate = new PythonFunction(this, 'lambdaCurrentDate', {
-			entry: path.resolve(__dirname, './lambda'),
-			index: 'get_execute_date.py',
+			functionName: "PipelineCurrentDate",
+			entry: './lambda/app',
+			index: 'get_current_date.py',
 			handler: 'handler',
 			runtime: lambda.Runtime.PYTHON_3_8,
-			timeout: Duration.seconds(120),
 		})
 		cdk.Tags.of(lambdaCurrentDate).add("runtime", "python")
 		const getCurrentDateAction = new codepipeline_actions.LambdaInvokeAction({
