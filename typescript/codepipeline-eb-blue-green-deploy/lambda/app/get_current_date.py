@@ -13,5 +13,5 @@ def handler(event, _):
 	job_id = event['CodePipeline.job']['id']
 	print(job_id)
 	# alternative tag for docker
-	output_variables = {"current_date": datetime.now().strftime("%Y-%m-%d")}
+	output_variables = {"current_date": datetime.now().strftime("%Y-%m-%dT%H%M")}
 	put_job_success(job_id=job_id, message=message, output_variables=output_variables)

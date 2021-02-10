@@ -1,5 +1,3 @@
-import * as path from "path";
-
 import * as cdk from "@aws-cdk/core";
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
@@ -9,7 +7,6 @@ import { PythonFunction } from '@aws-cdk/aws-lambda-python';
 import * as iam from '@aws-cdk/aws-iam';
 
 import { getParams } from './params';
-import { Duration } from "@aws-cdk/core";
 
 export class PipelineStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -119,8 +116,6 @@ export class PipelineStack extends cdk.Stack {
 				}
 			}
         });
-
-
 		pipeline.addStage({
             stageName: 'approveAndBuild',
             actions: [buildAction],
@@ -139,7 +134,6 @@ export class PipelineStack extends cdk.Stack {
 			lambda: lambdaSwapEB,
 			variablesNamespace: 'SwapVariables'
 		})
-
 		pipeline.addStage({
             stageName: 'SwapEnvironmentWithApproval',
             actions: [approvalAction, swapEB],
