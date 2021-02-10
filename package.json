@@ -1,7 +1,7 @@
 {
-  "name": "template_type_script",
+  "name": "aws-cdk-ts-small-examples",
   "version": "0.1.0",
-  "description": "template repository for TypeScript",
+  "description": "contains a set of TypeScript example projects for the AWS Cloud Development Kit.",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node src/index.ts",
@@ -19,15 +19,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsy0911/TemplateTypeScript.git"
+    "url": "git+https://github.com/gsy0911/aws-cdk-ts-small-examples.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gsy0911/TemplateTypeScript/issues"
+    "url": "https://github.com/gsy0911/aws-cdk-ts-small-examples/issues"
   },
-  "homepage": "https://github.com/gsy0911/TemplateTypeScript#readme",
+  "homepage": "https://github.com/gsy0911/aws-cdk-ts-small-examples#readme",
   "devDependencies": {
     "@aws-cdk/aws-apigateway": "^1.88.0",
     "@aws-cdk/aws-codebuild": "^1.88.0",
