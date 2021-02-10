@@ -19,4 +19,4 @@ def put_job_success(job_id, message, output_variables):
 def put_job_failure(job_id, message):
 	logger.info('Putting job failure')
 	logger.info(message)
-	codepipelineclient.put_job_failure_result(jobId=job, failureDetails={'message': message, 'type': 'JobFailed'})
+	codepipelineclient.put_job_failure_result(jobId=job_id, failureDetails={'message': message, 'type': 'JobFailed'})

@@ -1,12 +1,12 @@
-import boto3
 import json
-import traceback
-import time
-import sys
 from logging import getLogger, INFO
+import sys
 import threading
+import time
+import traceback
+import boto3
 
-from .utils import put_job_success, put_job_failure, timeout
+from utils import put_job_success, put_job_failure, timeout
 
 
 beanstalkclient = boto3.client('elasticbeanstalk')
@@ -69,9 +69,9 @@ def handler(event, context):
 	finally:
 		timer.cancel()
 		if status == "Success":
-			put_job_success(job_id, message)
+			put_job_success(job_id=job_id, message=message, output_variables={})
 		else:
-			put_job_failure(job_id, message)
+			put_job_failure(job_id=job_id, message=message)
 
 
 def delete_config_template_blue(application_name: str, template_name: str):

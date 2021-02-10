@@ -1,13 +1,15 @@
 from datetime import datetime
-from utils import put_job_success, put_job_failure
+from utils import put_job_success
 
 
-def handler(event, context):
-	# make sure we send a failure to CodePipeline if the function is going to timeout
-	# timer = threading.Timer((context.get_remaining_time_in_millis() / 1000.00) - 0.5, timeout, args=[event, context])
-	# timer.start()
+def handler(event, _):
 	message = "obtain current date"
 	# Extract the Job ID
+	if "CodePipeline.job" not in event:
+		raise ValueError()
+	if "id" not in event['CodePipeline.job']:
+		raise ValueError()
+
 	job_id = event['CodePipeline.job']['id']
 	print(job_id)
 	# alternative tag for docker

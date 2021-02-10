@@ -4,7 +4,7 @@ import sys
 import traceback
 import boto3
 
-from .utils import put_job_success, put_job_failure
+from utils import put_job_success, put_job_failure
 
 logger = getLogger(__name__)
 logger.setLevel(INFO)
@@ -78,7 +78,7 @@ def handler(event, _):
 		message = "Error occurred while executing this. The error is %s" % e
 	finally:
 		if status == "Success":
-			put_job_success(job_id, message)
+			put_job_success(job_id, message, output_variables={})
 		else:
 			put_job_failure(job_id, message)
 
