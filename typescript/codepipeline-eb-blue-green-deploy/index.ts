@@ -95,6 +95,10 @@ export class PipelineStack extends cdk.Stack {
 				"IMAGE_TAG": {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: getCurrentDateAction.variable('current_date')
+				},
+				"LOG_STREAM_NAME": {
+					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					value: params.cloudwatchLogsLogSteramName
 				}
 			},
 			role: buildRole
