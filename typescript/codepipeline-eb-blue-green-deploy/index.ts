@@ -87,6 +87,10 @@ export class PipelineStack extends cdk.Stack {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.awsAccountId,
 				},
+				"EB_APPLICATION_NAME": {
+					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					value: params.elasticBeanstalkApplicationName,
+				},
 				// overwrite values in BuildAction
 				"IMAGE_TAG": {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
