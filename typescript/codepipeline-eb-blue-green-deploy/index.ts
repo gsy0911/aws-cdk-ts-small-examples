@@ -75,6 +75,8 @@ export class PipelineStack extends cdk.Stack {
 			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
 		})
 		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
+		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
+
 
 		// to build docker in CodeBuild, set priviledged True
         const project = new codebuild.PipelineProject(this, 'MyProject', {
@@ -121,46 +123,26 @@ export class PipelineStack extends cdk.Stack {
 
 		pipeline.addStage({
             stageName: 'approveAndBuild',
-            actions: [approvalAction, buildAction],
+            actions: [buildAction],
         });
 
-
-		/**
-		 * lambda to create green environment
-		 */
-		const lambdaCreateGreenEnv = new lambda.Function(this, 'createGreenEnv', {
-			handler: 'create_green_env.handler',
+		const lambdaSwapEB = new PythonFunction(this, 'lambdaSwapEB', {
+			functionName: "PipelineSwapEB",
+			entry: './lambda/app',
+			index: 'swap_env.py',
+			handler: 'handler',
 			runtime: lambda.Runtime.PYTHON_3_8,
-			code: lambda.Code.fromAsset('./lambda_script'),
-			timeout: Duration.seconds(120),
 		})
-		const createGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
-			actionName: 'CreateGreenEnvironment',
-			lambda: lambdaCreateGreenEnv
+		cdk.Tags.of(lambdaSwapEB).add("runtime", "python")
+		const swapEB = new codepipeline_actions.LambdaInvokeAction({
+			actionName: 'swapEB',
+			lambda: lambdaSwapEB,
+			variablesNamespace: 'SwapVariables'
 		})
 
 		pipeline.addStage({
-            stageName: 'CreateGreenEnvironmentStage',
-            actions: [createGreenEnvAction],
-        });
-
-		/**
-		 * lambda to swap environments
-		 */
-		const lambdaTerminateGreenEnv = new lambda.Function(this, 'terminteGreenEnv', {
-			handler: 'terminate_green_env.handler',
-			runtime: lambda.Runtime.PYTHON_3_8,
-			code: lambda.Code.fromAsset('./lambda_script'),
-			timeout: Duration.seconds(120),
-		})
-		const terminateGreenEnvAction = new codepipeline_actions.LambdaInvokeAction({
-			actionName: 'TerminateGreenEnvironment',
-			lambda: lambdaTerminateGreenEnv
-		})
-
-		pipeline.addStage({
-            stageName: 'TerminateGreenEnvironmentStage',
-            actions: [terminateGreenEnvAction],
+            stageName: 'SwapEnvironmentWithApproval',
+            actions: [approvalAction, swapEB],
         });
 
     }
