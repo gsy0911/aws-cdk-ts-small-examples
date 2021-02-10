@@ -51,7 +51,8 @@ export class PipelineStack extends cdk.Stack {
 		cdk.Tags.of(lambdaCurrentDate).add("runtime", "python")
 		const getCurrentDateAction = new codepipeline_actions.LambdaInvokeAction({
 			actionName: 'getCurrentDate',
-			lambda: lambdaCurrentDate
+			lambda: lambdaCurrentDate,
+			variablesNamespace: 'BuildVariables'
 		})
 		pipeline.addStage({
             stageName: 'GetDockerImageTag',
@@ -86,6 +87,7 @@ export class PipelineStack extends cdk.Stack {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.awsAccountId,
 				},
+				// overwrite values in BuildAction
 				"IMAGE_TAG": {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: getCurrentDateAction.variable('current_date')
@@ -99,7 +101,13 @@ export class PipelineStack extends cdk.Stack {
             project,
             input: sourceOutput, // The build action must use the CodeCommitSourceAction output as input.
             outputs: [new codepipeline.Artifact()], // optional
-			runOrder: 2
+			runOrder: 2,
+			environmentVariables: {
+				"IMAGE_TAG": {
+					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					value: getCurrentDateAction.variable('current_date')
+				}
+			}
         });
 
 
