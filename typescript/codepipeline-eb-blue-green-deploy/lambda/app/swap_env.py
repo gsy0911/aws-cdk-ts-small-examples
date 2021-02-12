@@ -1,64 +1,39 @@
-import json
 from logging import getLogger, INFO
+import os
 import sys
-import threading
-import time
 import traceback
 import boto3
 
-from utils import put_job_success, put_job_failure, timeout
+from utils import put_job_success, put_job_failure
 
-
+EB_APPLICATION_NAME = os.environ['EB_APPLICATION_NAME']
 beanstalkclient = boto3.client('elasticbeanstalk')
 logger = getLogger(__name__)
 logger.setLevel(INFO)
 
 
-def handler(event, context):
-	# make sure we send a failure to CodePipeline if the function is going to timeout
-	timer = threading.Timer((context.get_remaining_time_in_millis() / 1000.00) - 0.5, timeout, args=[event, context])
-	timer.start()
-
+def handler(event, _):
 	status = "Failure"
 	message = "failed"
 	# Extract the Job ID
 	job_id = event['CodePipeline.job']['id']
 	try:
 		# Extract the Job Data
-		job_data = event['CodePipeline.job']['data']
-		user_parameters: dict = json.loads(job_data['actionConfiguration']['configuration']['UserParameters'])
+		# job_data = event['CodePipeline.job']['data']
+		# user_parameters: dict = json.loads(job_data['actionConfiguration']['configuration']['UserParameters'])
 
-		application_name = user_parameters['EB_APPLICATION_nAME']
-		get_environments(application_name=application_name)
-		# # Calling DeleteConfigTemplate API
-		# delete_config_template = delete_config_template_blue(
-		# 	application_name=(json.loads(user_parameters)['BeanstalkAppName']),
-		# 	template_name=(json.loads(user_parameters)['CreateConfigTempName']))
-		# logger.info(delete_config_template)
-		# # re-swapping the urls
-		# reswap = swap_green_and_blue(
-		# 	src_environment=(json.loads(user_parameters)['BlueEnvName']),
-		# 	dst_environment=(json.loads(user_parameters)['GreenEnvName']))
-		# if reswap == "Failure":
-		# 	raise Exception("Re-Swap did not happen")
-		# logger.info("Deleting the GreenEnvironment")
-		# delete_green_environment(environment_name=(json.loads(user_parameters)['GreenEnvName']))
-		# # Delete the S3 CNAME Config file
-		# s3 = boto3.resource('s3')
-		# bucket = s3.Bucket(json.loads(user_parameters)['BlueCNAMEConfigBucket'])
-		# key = 'hello.json'
-		# objs = list(bucket.objects.filter(Prefix=key))
-		# if len(objs) > 0 and objs[0].key == key:
-		# 	obj = s3.Object(
-		# 		json.loads(user_parameters)['BlueCNAMEConfigBucket'],
-		# 		json.loads(user_parameters)['BlueCNAMEConfigFile'])
-		# 	obj.delete()
-		# 	logger.info("Successfully deleted the CNAME Config file")
-		# else:
-		# 	logger.info("Seems like the CNAME Config file is already deleted!")
-		# # Send Success Message to CodePipeline
-		# status = "Success"
-		# message = "Successfully reswapped and terminated the Green Environment"
+		environments = get_environments(application_name=EB_APPLICATION_NAME)
+		print(environments)
+		if len(environments) < 2:
+			# if the number of environments is less than 2, error
+			put_job_failure(job_id=job_id, message="the number of environment is less than 2.")
+			return {}
+		# list `environments` is sorted by create datetime.
+		blue_env_name = environments[1]['EnvironmentName']
+		green_env_name = environments[0]['EnvironmentName']
+
+		status = swap_green_and_blue(src_environment=blue_env_name, dst_environment=green_env_name)
+		logger.info(f"swap result: {status}")
 
 	except Exception as e:
 		logger.info('Function failed due to exception.')
@@ -67,14 +42,14 @@ def handler(event, context):
 		logger.info(e)
 		traceback.print_exc()
 		status = "Failure"
-		message = ("Error occured while executing this. The error is %s" % e)
+		message = ("Error occurred while executing this. The error is %s" % e)
 
 	finally:
-		timer.cancel()
 		if status == "Success":
 			put_job_success(job_id=job_id, message=message, output_variables={})
 		else:
 			put_job_failure(job_id=job_id, message=message)
+	return {}
 
 
 def get_environments(application_name: str) -> list:
@@ -86,6 +61,7 @@ def get_environments(application_name: str) -> list:
 
 
 def swap_green_and_blue(src_environment: str, dst_environment: str) -> str:
+	logger.info(f"from [{src_environment=}] to [{dst_environment=}]")
 	env_data = beanstalkclient.describe_environments(
 		EnvironmentNames=[src_environment, dst_environment],
 		IncludeDeleted=False)
