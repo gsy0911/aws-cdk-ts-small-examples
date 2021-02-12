@@ -57,15 +57,6 @@ export class PipelineStack extends cdk.Stack {
         });
 
 		/**
-		 * approval action
-		 */
-		const approvalAction = new codepipeline_actions.ManualApprovalAction({
-			actionName: 'DeployApprovalAction',
-			runOrder: 1,
-			externalEntityLink: sourceAction.variables.commitUrl,
-		});
-
-		/**
 		 * deploy action
 		 */
 		const buildRole = new iam.Role(this, 'BuildRole', {
@@ -117,9 +108,26 @@ export class PipelineStack extends cdk.Stack {
 			}
         });
 		pipeline.addStage({
-            stageName: 'approveAndBuild',
+            stageName: 'BuildDockerAndDeployEB',
             actions: [buildAction],
         });
+
+		/**
+		 * approval action
+		 */
+		const approvalAction = new codepipeline_actions.ManualApprovalAction({
+			actionName: 'DeployApprovalAction',
+			runOrder: 1,
+			externalEntityLink: sourceAction.variables.commitUrl,
+		});
+
+		/**
+		 * lambda to Swap EB environments.
+		 */
+		const swapRole = new iam.Role(this, 'SwapRole', {
+			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
+		})
+		swapRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'SwapRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
 
 		const lambdaSwapEB = new PythonFunction(this, 'lambdaSwapEB', {
 			functionName: "PipelineSwapEB",
@@ -127,12 +135,17 @@ export class PipelineStack extends cdk.Stack {
 			index: 'swap_env.py',
 			handler: 'handler',
 			runtime: lambda.Runtime.PYTHON_3_8,
+			role: swapRole,
+			environment: {
+				EB_APPLICATION_NAME: params.elasticBeanstalkApplicationName
+			}
 		})
 		cdk.Tags.of(lambdaSwapEB).add("runtime", "python")
 		const swapEB = new codepipeline_actions.LambdaInvokeAction({
 			actionName: 'swapEB',
 			lambda: lambdaSwapEB,
-			variablesNamespace: 'SwapVariables'
+			variablesNamespace: 'SwapVariables',
+			runOrder: 2,
 		})
 		pipeline.addStage({
             stageName: 'SwapEnvironmentWithApproval',
