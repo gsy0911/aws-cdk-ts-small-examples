@@ -18,12 +18,8 @@ def handler(event, _):
 	# Extract the Job ID
 	job_id = event['CodePipeline.job']['id']
 	try:
-		# Extract the Job Data
-		# job_data = event['CodePipeline.job']['data']
-		# user_parameters: dict = json.loads(job_data['actionConfiguration']['configuration']['UserParameters'])
-
 		environments = get_environments(application_name=EB_APPLICATION_NAME)
-		print(environments)
+		logger.info(environments)
 		if len(environments) < 2:
 			# if the number of environments is less than 2, error
 			put_job_failure(job_id=job_id, message="the number of environment is less than 2.")

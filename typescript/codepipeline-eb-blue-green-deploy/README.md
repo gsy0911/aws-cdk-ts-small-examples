@@ -9,7 +9,7 @@ Uploaded file must be a non-empty zip ...
 
 error occurres, try
 
-1. run the shell script `fxi_err.sh`
+1. run the shell script `fix_err.sh`
 1. remove cdk.out
 1. downgraded Node to v14 via Homebrew
 1. cdk deploy
