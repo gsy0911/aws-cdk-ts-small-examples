@@ -1,3 +1,55 @@
+# CodePipeline-EB-BlueGreenDeploy
+
+## Required Policies
+
+- Managed Policy
+	- SecretsManagerReadWrite
+	- AWSLambdaFullAccess
+	- AmazonS3FullAccess
+	- AWSCodePipelineFullAccess
+	- AWSCodeBuildAdminAccess
+	- AWSCloudFormationFullAccess
+- Inline Policy
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:Create*",
+                "kms:Describe*",
+                "kms:Enable*",
+                "kms:List*",
+                "kms:Put*",
+                "kms:Update*",
+                "kms:Revoke*",
+                "kms:Disable*",
+                "kms:Get*",
+                "kms:Delete*",
+                "kms:TagResource",
+                "kms:UntagResource",
+                "kms:ScheduleKeyDeletion",
+                "kms:CancelKeyDeletion"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 
 ## deploying lambda error
 
