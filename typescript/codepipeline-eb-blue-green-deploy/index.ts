@@ -63,15 +63,90 @@ export class PipelineStack extends cdk.Stack {
 			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
 		})
 		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
-		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
-
+		// buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: [
+				`arn:aws:elasticbeanstalk:*:${params.awsAccountId}:application/${params.elasticBeanstalkApplicationName}`,
+				`arn:aws:elasticbeanstalk:*:${params.awsAccountId}:environment/${params.elasticBeanstalkApplicationName}/${params.elasticBeanstalkEnvironmentSuffix}*`,
+				`arn:aws:elasticbeanstalk:*:${params.awsAccountId}:applicationversion/*/*`
+			],
+			actions: ['elasticbeanstalk:*'],
+		}))
+		// 以下のPolicyは`arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess`を参考に設定している
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['arn:aws:iam::*:role/aws-elasticbeanstalk*', 'arn:aws:iam::*:instance-profile/aws-elasticbeanstalk*'],
+			actions: ['iam:AddRoleToInstanceProfile', 'iam:CreateInstanceProfile', 'iam:CreateRole'],
+		}))
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['arn:aws:iam::*:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling*'],
+			actions: ['iam:CreateServiceLinkedRole'],
+			conditions: {
+				StringLike: {'iam:AWSServiceName': 'autoscaling.amazonaws.com'}
+			}
+		}))
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['arn:aws:iam::*:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk*'],
+			actions: ['iam:CreateServiceLinkedRole'],
+			conditions: {
+				StringLike: {'iam:AWSServiceName': 'elasticbeanstalk.amazonaws.com'}
+			}
+		}))
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing*'],
+			actions: ['iam:CreateServiceLinkedRole'],
+			conditions: {
+				StringLike: {'iam:AWSServiceName': 'elasticloadbalancing.amazonaws.com'}
+			}
+		}))
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['arn:aws:iam::*:role/aws-elasticbeanstalk*'],
+			actions: ['iam:AttachRolePolicy'],
+			conditions: {
+				StringLike: {'iam:PolicyArn': ['arn:aws:iam::aws:policy/AWSElasticBeanstalk*', 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalk*']}
+			}
+		}))
+		// ElasticBeanstalkの環境を作成する際に必要な権限
+		buildRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ['*'],
+			actions: [
+				'elasticbeanstalk:ListPlatformBranches',
+				'elasticbeanstalk:CheckDNSAvailability',
+				'elasticbeanstalk:CreateStorageLocation',
+				'ec2:*',
+				'ecs:*',
+				'elasticloadbalancing:*',
+				'autoscaling:*',
+				'cloudwatch:*',
+				's3:*',
+				'sns:*',
+				'cloudformation:*',
+				'sqs:*',
+				'iam:GetPolicyVersion',
+                'iam:GetRole',
+                'iam:PassRole',
+                'iam:ListRolePolicies',
+                'iam:ListAttachedRolePolicies',
+                'iam:ListInstanceProfiles',
+                'iam:ListRoles',
+                'iam:ListServerCertificates',
+			]
+		}))
 
 		// to build docker in CodeBuild, set priviledged True
+		const codeBuildCache = codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER)
         const project = new codebuild.PipelineProject(this, 'MyProject', {
 			environment: {
 				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2,
 				privileged: true
 			},
+			cache: codeBuildCache,
 			environmentVariables: {
 				"AWS_ACCOUNT": {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
