@@ -14,11 +14,6 @@ export class DummyApiStack extends cdk.Stack {
 	})
 	role.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'SwapRoleToAccessEB', 'arn:aws:iam::aws:policy/CloudWatchFullAccess'))
 
-	/**
-	 * lambda to get current date as docker-image-tag
-	 *
-	 * lambda returns '2021-01-01'.
-	 */
 	const lambdaSimpleResponse = new PythonFunction(this, 'lambdaSimpleResponse', {
 		functionName: "simple_response",
 		entry: './lambda',
