@@ -23,7 +23,7 @@ export class WafStack extends cdk.Stack {
 
 		firehoseAccessS3Role.addToPolicy(new iam.PolicyStatement({
 			effect: iam.Effect.ALLOW,
-			resources: [`arn:aws:s3:::${logS3.bucketName}`],
+			resources: [`arn:aws:s3:::${logS3.bucketName}`, `arn:aws:s3:::${logS3.bucketName}/*`],
 			actions: [
 				's3:*',
 			]
@@ -38,104 +38,105 @@ export class WafStack extends cdk.Stack {
 			deliveryStreamName: "aws-waf-logs-sample",
 			s3DestinationConfiguration: {
 				bucketArn: logS3.bucketArn,
-				roleArn: firehoseAccessS3Role.roleArn
+				roleArn: firehoseAccessS3Role.roleArn,
+				prefix: "raw/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}",
+				errorOutputPrefix: "raw-error/!{firehose:error-output-type}/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}"
 			}
 		})
 
 		// WebACL
 		const webAcl = new wafv2.CfnWebACL(this, "SampleWafAcl", {
-		defaultAction: { allow: {} },
-		name: "sample-waf-web-acl",
-		rules: [
+			defaultAction: { allow: {} },
+			name: "sample-waf-web-acl",
+			rules: [
 
-			{
-				priority: 1,
-				overrideAction: { none: {} },
-				visibilityConfig: {
-					sampledRequestsEnabled: true,
-					cloudWatchMetricsEnabled: true,
-					metricName: "AWS-ManagedRulesCommonRuleSet"
-				},
-				name: "AWSManagedRulesCommonRuleSet",
-				statement: {
-					managedRuleGroupStatement: {
-					vendorName: "AWS",
-					name: "AWSManagedRulesCommonRuleSet"
-					}
-				}
-			},
-			{
-				priority: 2,
-				overrideAction: { none: {} },
-				visibilityConfig: {
-					sampledRequestsEnabled: true,
-					cloudWatchMetricsEnabled: true,
-					metricName: "AWS-ManagedRulesKnownBadInputsRuleSet"
-				},
-				name: "AWSManagedRulesKnownBadInputsRuleSet",
-				statement: {
-					managedRuleGroupStatement: {
+				{
+					priority: 1,
+					overrideAction: { none: {} },
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "AWS-ManagedRulesCommonRuleSet"
+					},
+					name: "AWSManagedRulesCommonRuleSet",
+					statement: {
+						managedRuleGroupStatement: {
 						vendorName: "AWS",
-						name: "AWSManagedRulesKnownBadInputsRuleSet"
+						name: "AWSManagedRulesCommonRuleSet"
+						}
 					}
-				}
-			},
-			{
-				priority: 3,
-				overrideAction: { none: {} },
-				visibilityConfig: {
-					sampledRequestsEnabled: true,
-					cloudWatchMetricsEnabled: true,
-					metricName: "AWS-ManagedRulesAdminProtectionRuleSet"
 				},
-				name: "AWSManagedRulesAdminProtectionRuleSet",
-				statement: {
-					managedRuleGroupStatement: {
-						vendorName: "AWS",
-						name: "AWSManagedRulesAdminProtectionRuleSet"
+				{
+					priority: 2,
+					overrideAction: { none: {} },
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "AWS-ManagedRulesKnownBadInputsRuleSet"
+					},
+					name: "AWSManagedRulesKnownBadInputsRuleSet",
+					statement: {
+						managedRuleGroupStatement: {
+							vendorName: "AWS",
+							name: "AWSManagedRulesKnownBadInputsRuleSet"
+						}
 					}
-				}
-			},
-			{
-				priority: 4,
-				overrideAction: { none: {} },
-				visibilityConfig: {
-					sampledRequestsEnabled: true,
-					cloudWatchMetricsEnabled: true,
-					metricName: "AWS-AWSManagedRulesSQLiRuleSet"
 				},
-				name: "AWSAWSManagedRulesSQLiRuleSet",
-				statement: {
-					managedRuleGroupStatement: {
-						vendorName: "AWS",
-						name: "AWSManagedRulesSQLiRuleSet"
+				{
+					priority: 3,
+					overrideAction: { none: {} },
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "AWS-ManagedRulesAdminProtectionRuleSet"
+					},
+					name: "AWSManagedRulesAdminProtectionRuleSet",
+					statement: {
+						managedRuleGroupStatement: {
+							vendorName: "AWS",
+							name: "AWSManagedRulesAdminProtectionRuleSet"
+						}
 					}
-				}
-			},
-			{
-				priority: 5,
-				overrideAction: { none: {} },
-				visibilityConfig: {
-					sampledRequestsEnabled: true,
-					cloudWatchMetricsEnabled: true,
-					metricName: "AWS-ManagedRulesLinuxRuleSet"
 				},
-				name: "AWSManagedRulesLinuxRuleSet",
-				statement: {
-					managedRuleGroupStatement: {
-						vendorName: "AWS",
-						name: "AWSManagedRulesLinuxRuleSet"
+				{
+					priority: 4,
+					overrideAction: { none: {} },
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "AWS-AWSManagedRulesSQLiRuleSet"
+					},
+					name: "AWSAWSManagedRulesSQLiRuleSet",
+					statement: {
+						managedRuleGroupStatement: {
+							vendorName: "AWS",
+							name: "AWSManagedRulesSQLiRuleSet"
+						}
+					}
+				},
+				{
+					priority: 5,
+					overrideAction: { none: {} },
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "AWS-ManagedRulesLinuxRuleSet"
+					},
+					name: "AWSManagedRulesLinuxRuleSet",
+					statement: {
+						managedRuleGroupStatement: {
+							vendorName: "AWS",
+							name: "AWSManagedRulesLinuxRuleSet"
+						}
 					}
 				}
-			}
-		],
-		scope: "REGIONAL",
-		visibilityConfig: {
-			cloudWatchMetricsEnabled: true,
-			metricName: "sample-waf-web-acl",
-			sampledRequestsEnabled: true
-		},
-
+			],
+			scope: "REGIONAL",
+			visibilityConfig: {
+				cloudWatchMetricsEnabled: true,
+				metricName: "sample-waf-web-acl",
+				sampledRequestsEnabled: true
+			},
 		});
 	}
 }
