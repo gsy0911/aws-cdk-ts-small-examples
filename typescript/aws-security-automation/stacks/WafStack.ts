@@ -39,8 +39,8 @@ export class WafStack extends cdk.Stack {
 			s3DestinationConfiguration: {
 				bucketArn: logS3.bucketArn,
 				roleArn: firehoseAccessS3Role.roleArn,
-				prefix: "raw/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}",
-				errorOutputPrefix: "raw-error/!{firehose:error-output-type}/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}"
+				prefix: "raw/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/",
+				errorOutputPrefix: "raw-error/!{firehose:error-output-type}/dt=!{timestamp:yyyy}-!{timestamp:MM}-!{timestamp:dd}/"
 			}
 		})
 
