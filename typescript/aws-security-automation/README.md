@@ -12,3 +12,4 @@
 - Japanese
 	- [AWS Security Automations(JP)](https://aws.amazon.com/jp/solutions/implementations/aws-waf-security-automations/)
 	- [AWS Managed Rules rule groups list(JP)](https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/aws-managed-rule-groups-list.html)
+	- [AWS WAF v2 のアクションを検知(Count)からブロック(Block)へ移行する](https://runble1.com/aws-waf-v2-action/)

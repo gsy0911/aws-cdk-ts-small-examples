@@ -44,14 +44,67 @@ export class WafStack extends cdk.Stack {
 			}
 		})
 
+		// Custom Rule
+		const customRule = new wafv2.CfnRuleGroup(this, 'customRule', {
+			capacity: 50,
+			scope: "REGIONAL",
+			visibilityConfig: {
+				sampledRequestsEnabled: true,
+				cloudWatchMetricsEnabled: true,
+				metricName: "customRulesCommonRuleSet"
+			},
+			name: 'customBlockRule',
+			description: "override custom rule for AWSManagedRulesCommonRuleSet",
+			rules: [
+				{
+					name: "uriSize",
+					priority: 1,
+					action: { block: {} },
+					statement: {
+						sizeConstraintStatement: {
+							comparisonOperator: "GT",
+							fieldToMatch: {
+								queryString: {}
+							},
+							size: params.maxExpectedQueryStringSize,
+							textTransformations: [
+								{priority: 0, type: "NONE"}
+							]
+						}
+					},
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "uriSize"
+					}
+				}
+			]
+		})
+
 		// WebACL
 		const webAcl = new wafv2.CfnWebACL(this, "SampleWafAcl", {
 			defaultAction: { allow: {} },
 			name: "sample-waf-web-acl",
 			rules: [
-
+				/** Custom Rules below */
 				{
 					priority: 1,
+					name: 'customRulesCommonRuleSet',
+					overrideAction: { none: {}},
+					visibilityConfig: {
+						sampledRequestsEnabled: true,
+						cloudWatchMetricsEnabled: true,
+						metricName: "customRulesCommonRuleSet"
+					},
+					statement: {
+						ruleGroupReferenceStatement: {
+							arn: customRule.attrArn
+						}
+					}
+				},
+				/** Managed Rules below */
+				{
+					priority: 2,
 					overrideAction: { none: {} },
 					visibilityConfig: {
 						sampledRequestsEnabled: true,
@@ -61,13 +114,13 @@ export class WafStack extends cdk.Stack {
 					name: "AWSManagedRulesCommonRuleSet",
 					statement: {
 						managedRuleGroupStatement: {
-						vendorName: "AWS",
-						name: "AWSManagedRulesCommonRuleSet"
+							vendorName: "AWS",
+							name: "AWSManagedRulesCommonRuleSet"
 						}
 					}
 				},
 				{
-					priority: 2,
+					priority: 3,
 					overrideAction: { none: {} },
 					visibilityConfig: {
 						sampledRequestsEnabled: true,
@@ -83,7 +136,7 @@ export class WafStack extends cdk.Stack {
 					}
 				},
 				{
-					priority: 3,
+					priority: 4,
 					overrideAction: { none: {} },
 					visibilityConfig: {
 						sampledRequestsEnabled: true,
@@ -99,7 +152,7 @@ export class WafStack extends cdk.Stack {
 					}
 				},
 				{
-					priority: 4,
+					priority: 5,
 					overrideAction: { none: {} },
 					visibilityConfig: {
 						sampledRequestsEnabled: true,
@@ -115,7 +168,7 @@ export class WafStack extends cdk.Stack {
 					}
 				},
 				{
-					priority: 5,
+					priority: 6,
 					overrideAction: { none: {} },
 					visibilityConfig: {
 						sampledRequestsEnabled: true,
