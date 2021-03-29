@@ -34,5 +34,5 @@ export class CloudTrailStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new CloudTrailStack(app, "CloudTrailStack", params);
+new CloudTrailStack(app, "CloudTrailStack", params, {description: "ts-example"});
 app.synth();
