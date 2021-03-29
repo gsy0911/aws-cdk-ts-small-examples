@@ -41,6 +41,8 @@
     "@aws-cdk/aws-lambda-python": "^1.95.1",
     "@aws-cdk/aws-logs": "^1.95.1",
     "@aws-cdk/aws-route53": "^1.95.1",
+    "@aws-cdk/aws-s3": "^1.95.1",
+    "@aws-cdk/aws-wafv2": "^1.95.1",
     "@aws-cdk/core": "^1.95.1",
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
