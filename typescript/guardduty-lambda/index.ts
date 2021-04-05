@@ -3,10 +3,10 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as events from '@aws-cdk/aws-events';
 import * as eventsTargets from '@aws-cdk/aws-events-targets';
 import * as lambda from '@aws-cdk/aws-lambda';
-import * as logs from '@aws-cdk/aws-logs';
-import * as route53 from '@aws-cdk/aws-route53';
+import * as sns from '@aws-cdk/aws-sns';
+import * as chatbot from '@aws-cdk/aws-chatbot';
 import { PythonFunction } from '@aws-cdk/aws-lambda-python';
-import { IParameters, defaultParams } from './IParameters';
+import { IParameters } from './IParameters';
 import { params } from './params';
 
 
@@ -29,30 +29,40 @@ export class GuardDutyStack extends cdk.Stack {
 			role: lambdaRole
 		})
 
+		const topic = new sns.Topic(this, 'Topic', {
+			topicName: 'GuardDuty-TopicToSlack',
+			displayName: 'GuardDuty-TopicToSlack'
+		})
+
 		/** Add EventTarget */
 		const guardDutyEventTarget = new eventsTargets.LambdaFunction(lambdaGuardDutyHandler)
+		const guardDutySnsTarget = new eventsTargets.SnsTopic(topic)
+
 		const trigger = new events.Rule(this, "guard-duty-event", {
 			eventPattern: {
 				source: [
 					"aws.guardduty"
 				]
 			},
-			targets: [guardDutyEventTarget]
+			targets: [guardDutyEventTarget, guardDutySnsTarget]
 		})
 
-		// const hostedZone = route53.HostedZone.fromHostedZoneId(this, "hostedZone", params.hostedZoneId)
+		const slackChannel = new chatbot.SlackChannelConfiguration(this, 'GuardDutySlackChannel', {
+			slackChannelConfigurationName: 'guard-duty-notification',
+			slackWorkspaceId: params.slackWorkspaceId,
+			slackChannelId: params.slackChannelId,
+			notificationTopics: [topic]
+		})
 
-		// /** create IAM Role to access DNS Logs */
-		// const dnsLogRole = new iam.Role(this, 'dnsLogRole', {
-		// 	assumedBy: new iam.ServicePrincipal('route53.amazonaws.com')
-		// })
-		// dnsLogRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'dnsLogRoleCwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess'))
-
-		// /** create Log Group */
-		// const logGroup = new logs.LogGroup(this, 'DnsLogGroup', {
-		// 	logGroupName: params.dnsLogName,
-		// 	retention: logs.RetentionDays.ONE_WEEK,
-		// });
+		slackChannel.addToRolePolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			actions: [
+                "cloudwatch:Describe*",
+                "cloudwatch:Get*",
+                "cloudwatch:List*"
+			],
+			resources: ['*']
+		}))
 
  	 }
 }
