@@ -1,6 +1,7 @@
+import cdk = require('@aws-cdk/core');
 import ec2 = require('@aws-cdk/aws-ec2');
 import ecs = require('@aws-cdk/aws-ecs');
-import cdk = require('@aws-cdk/core');
+import ecs_patterns = require('@aws-cdk/aws-ecs-patterns');
 
 export class EcsFargateStack extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -21,13 +22,19 @@ export class EcsFargateStack extends cdk.Stack {
 
 		taskDef.addContainer("AppContainer", {
 			image: ecs.ContainerImage.fromRegistry("amazon/amazon-ecs-sample"),
+			portMappings: [
+				{
+					containerPort: 80,
+					hostPort: 80
+				}
+			],
 			logging,
 		})
 
-		// Instantiate ECS Service with just cluster and image
-		new ecs.FargateService(this, "FargateService", {
+		// Instantiate Fargate Service with just cluster and image
+		new ecs_patterns.ApplicationLoadBalancedFargateService(this, "FargateService", {
 			cluster,
-			taskDefinition: taskDef
+			taskDefinition: taskDef,
 		});
 	}
 }
