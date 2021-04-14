@@ -6,9 +6,9 @@ If you'd like to find python example, check [this repository](https://github.com
 
 ## Environment
 
-- [![macOS](https://img.shields.io/badge/macOS_Catalina-10.15.7-green.svg)]()
-- [![cdk-version](https://img.shields.io/badge/aws_cdk-1.94.1-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
-- [![NodeVersion](https://img.shields.io/badge/node-14.15.4-blue.svg)](https://nodejs.org/ja/)
+- [![macOS](https://img.shields.io/badge/macOS_BigSur-10.15.7-green.svg)]()
+- [![cdk-version](https://img.shields.io/badge/aws_cdk-1.97.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
+- [![NodeVersion](https://img.shields.io/badge/node-14.16.1-blue.svg)](https://nodejs.org/ja/)
 
 # TypeScript examples
 
@@ -24,7 +24,7 @@ and then,
 $ cdk deploy {target_name}
 ```
 
-finally you should destroy everything.
+finally, you should destroy everything.
 
 ```
 $ cdk destroy {target_name}

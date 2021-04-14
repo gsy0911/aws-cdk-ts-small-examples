@@ -1,11 +1,14 @@
 import * as cdk from "@aws-cdk/core";
-import {IParameters} from "./IParameters";
 import * as iam from "@aws-cdk/aws-iam";
 import * as ec2 from '@aws-cdk/aws-ec2';
 
 
-export class Ec2Imdsv2Stack extends cdk.Stack {
-	constructor(app: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
+export interface IVpcEc2 {
+	vpcCidr: string
+}
+
+export class VpcEc2Stack extends cdk.Stack {
+	constructor(app: cdk.App, id: string, params: IVpcEc2, props?: cdk.StackProps) {
 		super(app, id, props);
 
 		const vpc = new ec2.Vpc(this, `ec2-vpc`, {

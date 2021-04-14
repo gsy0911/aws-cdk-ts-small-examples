@@ -1,9 +1,12 @@
 import * as cdk from "@aws-cdk/core";
-import {Ec2Imdsv2Stack} from './Ec2Imdsv2Stack';
-import {IParameters} from './IParameters';
-import {params} from './params';
+import {VpcEc2Stack, IVpcEc2} from '../stacks';
+
+
+export const params: IVpcEc2 = {
+	vpcCidr: "192.168.5.0/24"
+}
 
 
 const app = new cdk.App();
-new Ec2Imdsv2Stack(app, "Ec2Ismv2", params, {description: "ts-example"});
+new VpcEc2Stack(app, "Ec2Ismv2", params, {description: "ts-example"});
 app.synth();
