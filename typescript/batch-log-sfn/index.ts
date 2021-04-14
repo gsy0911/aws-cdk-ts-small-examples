@@ -8,7 +8,6 @@ export const params: IBatchLogSfn = {
 }
 
 
-
 const app = new cdk.App();
 new BatchSfnStack(app, "BatchSfn", params);
 app.synth();

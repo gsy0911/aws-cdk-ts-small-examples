@@ -1,11 +1,11 @@
 import * as cdk from "@aws-cdk/core";
 import * as awsconfig from '@aws-cdk/aws-config';
-import { IParameters } from './IParameters';
-import { params } from './params';
+import {IParameters} from './IParameters';
+import {params} from './params';
 
 
 export class AwsConfigStack extends cdk.Stack {
-  	constructor(app: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
+	constructor(app: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
 		super(app, id, props);
 
 		const config = new awsconfig.CfnConfigurationRecorder(this, "AwsConfig", {
@@ -16,8 +16,7 @@ export class AwsConfigStack extends cdk.Stack {
 				includeGlobalResourceTypes: true
 			}
 		})
-
- 	 }
+	}
 }
 
 const app = new cdk.App();
