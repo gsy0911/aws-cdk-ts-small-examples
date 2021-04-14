@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {Ec2Imdsv2Stack} from './Ec2Ismv2Stack';
+import {Ec2Imdsv2Stack} from './Ec2Imdsv2Stack';
 import {IParameters} from './IParameters';
 import {params} from './params';
 
