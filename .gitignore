@@ -146,3 +146,4 @@ dist
 
 *cdk.out
 *params.ts
+*cdk.context.json
