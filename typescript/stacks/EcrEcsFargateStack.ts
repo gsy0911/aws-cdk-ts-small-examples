@@ -1,7 +1,7 @@
-import cdk = require('@aws-cdk/core');
-import ec2 = require('@aws-cdk/aws-ec2');
-import ecs = require('@aws-cdk/aws-ecs');
-import ecs_patterns = require('@aws-cdk/aws-ecs-patterns');
+import * as cdk from '@aws-cdk/core';
+import * as ec2 from '@aws-cdk/aws-ec2';
+import * as ecs from '@aws-cdk/aws-ecs';
+import * as ecs_patterns from '@aws-cdk/aws-ecs-patterns';
 
 export interface IEcrEcsFargate {
 	vpcId: string
