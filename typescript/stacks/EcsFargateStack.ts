@@ -3,12 +3,26 @@ import ec2 = require('@aws-cdk/aws-ec2');
 import ecs = require('@aws-cdk/aws-ecs');
 import ecs_patterns = require('@aws-cdk/aws-ecs-patterns');
 
+export interface IEcsFargate {
+	vpcId: string
+	env: {
+		account: string
+		region: string
+	}
+}
+
+
 export class EcsFargateStack extends cdk.Stack {
-	constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+	constructor(scope: cdk.App, id: string, params: IEcsFargate, props?: cdk.StackProps) {
 		super(scope, id, props);
 
-		const vpc = new ec2.Vpc(this, 'MyVpc', {maxAzs: 2});
-		const cluster = new ecs.Cluster(this, 'Ec2Cluster', {vpc});
+		const vpc = ec2.Vpc.fromLookup(this, `existing-vpc-${id}`, {
+			vpcId: params.vpcId
+		})
+		const cluster = new ecs.Cluster(this, 'FargateCluster', {
+			vpc: vpc,
+			clusterName: "fargate-cluster"
+		});
 
 		// create a task definition with CloudWatch Logs
 		const logging = new ecs.AwsLogDriver({
@@ -33,8 +47,10 @@ export class EcsFargateStack extends cdk.Stack {
 
 		// Instantiate Fargate Service with just cluster and image
 		new ecs_patterns.ApplicationLoadBalancedFargateService(this, "FargateService", {
-			cluster,
+			cluster: cluster,
+			assignPublicIp: true,
 			taskDefinition: taskDef,
+			circuitBreaker: {rollback: true}
 		});
 	}
 }
