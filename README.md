@@ -7,8 +7,8 @@ If you'd like to find python example, check [this repository](https://github.com
 ## Environment
 
 - [![macOS](https://img.shields.io/badge/macOS_BigSur-10.15.7-green.svg)]()
-- [![cdk-version](https://img.shields.io/badge/aws_cdk-1.97.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
-- [![NodeVersion](https://img.shields.io/badge/node-14.16.1-blue.svg)](https://nodejs.org/ja/)
+- [![cdk-version](https://img.shields.io/badge/aws_cdk-1.100.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
+- [![NodeVersion](https://img.shields.io/badge/node-16.0.0-blue.svg)](https://nodejs.org/ja/)
 
 # TypeScript examples
 
@@ -34,9 +34,17 @@ $ cdk destroy {target_name}
 ## Contents
 
 | Example | Description |
-|:--:|:--:|
+|:---:|:---:|
+| [aws-config](./typescript/aws-config) | Add AWS Config |
+| [aws-security-automation](./typescript/aws-security-automation) | - |
+| [batch-log-sfn](./typescript/batch-log-sfn) | AWS Batch and StepFunctions. |
+| [cloudtrail](./typescript/cloudtrail) | Add CloudTrail |
 | [codepipeline-eb-blue-green-deploy](./typescript/codepipeline-eb-blue-green-deploy) | Create CI/CD flow with CodePipeline, CodeBuild for ElasticBeanstalk. |
+| [ec2-ismv2](./typescript/ec2-ismv2) | Add new VPC and EC2 with SSM |
+| [ecs-fargate](./typescript/ecs-fargate) | Add ECS Fargate execution environment, from demo container or ECR. |
+| [guardduty-lambda](./typescript/guardduty-lambda) | Add chatbot to notify slack, and add lambda to be used as IPS. |
 | [http-proxy-apigateway](./typescript/http-proxy-apigateway) | copy from origin. |
+
 
 # References
 
