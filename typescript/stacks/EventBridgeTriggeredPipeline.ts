@@ -29,13 +29,9 @@ export interface IEcrTriggeredPipeline {
 }
 
 
-export class EcrTriggeredPipeline extends cdk.Stack {
+export class EventBridgeTriggeredPipeline extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, params: IEcrTriggeredPipeline, props?: cdk.StackProps) {
 		super(scope, id, props);
-
-		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
-            pipelineName: "MyPipeline"
-        });
 
         // S3 location
         const sourceOutput = new codepipeline.Artifact();
@@ -47,10 +43,6 @@ export class EcrTriggeredPipeline extends cdk.Stack {
             oauthToken: oauth,
             output: sourceOutput,
             branch: params.gitSourceBranch || 'master',
-        });
-        pipeline.addStage({
-            stageName: 'Source',
-            actions: [sourceAction],
         });
 
 		/**
@@ -71,10 +63,6 @@ export class EcrTriggeredPipeline extends cdk.Stack {
 			lambda: lambdaCurrentDate,
 			variablesNamespace: 'BuildVariables'
 		})
-		pipeline.addStage({
-            stageName: 'GetDockerImageTag',
-            actions: [getCurrentDateAction],
-        });
 
 		/**
 		 * deploy action
@@ -123,65 +111,26 @@ export class EcrTriggeredPipeline extends cdk.Stack {
 				}
 			}
         });
-		pipeline.addStage({
-            stageName: 'BuildDockerAndDeployEB',
-            actions: [buildAction],
+
+		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
+            pipelineName: "EventBridgeTriggeredDeployPipeline",
+			stages: [
+				{
+					stageName: 'Source',
+					actions: [sourceAction],
+				},
+				{
+					stageName: 'GetDockerImageTag',
+					actions: [getCurrentDateAction],
+				},
+				{
+					stageName: 'BuildDockerAndDeployEB',
+					actions: [buildAction],
+				}
+			]
         });
 
-		// const vpc = ec2.Vpc.fromLookup(this, `existing-vpc-${id}`, {
-		// 	vpcId: params.vpcId
-		// })
-		// const cluster = new ecs.Cluster(this, 'FargateCluster', {
-		// 	vpc: vpc,
-		// 	clusterName: "fargate-cluster"
-		// });
-		//
-		// // create a task definition with CloudWatch Logs
-		// const logging = new ecs.AwsLogDriver({
-		// 	streamPrefix: "myapp",
-		// })
-		//
-		// const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
-		// 	memoryLimitMiB: 512,
-		// 	cpu: 256,
-		// })
-		//
-		// // in Fargate, `Link` is disabled because only `awsvpc` mode supported.
-		// // So, use `localhost:port` instead.
-		// taskDef.addContainer("NodeContainer", {
-		// 	image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_node"),
-		// 	portMappings: [
-		// 		{
-		// 			containerPort: 8080,
-		// 			hostPort: 8080
-		// 		}
-		// 	],
-		// 	logging,
-		// })
-		// taskDef.addContainer("NginxContainer", {
-		// 	image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_nginx"),
-		// 	portMappings: [
-		// 		{
-		// 			containerPort: 80,
-		// 			hostPort: 80
-		// 		}
-		// 	],
-		// 	logging,
-		// })
-		//
-		// // Instantiate Fargate Service with just cluster and image
-		// new ecs_patterns.ApplicationLoadBalancedFargateService(this, "FargateService", {
-		// 	cluster: cluster,
-		// 	assignPublicIp: true,
-		// 	taskDefinition: taskDef,
-		// 	deploymentController: {
-		// 		// Blue/Green Deployment using CodeDeploy
-		// 		type: ecs.DeploymentControllerType.CODE_DEPLOY
-		// 	},
-		// 	circuitBreaker: {rollback: true}
-		// });
-
-		new events.Rule(this, "security-hub-event", {
+		new events.Rule(this, "pipeline-trigger-event", {
 			eventPattern: {
 				source: [
 					"aws.ecr",
