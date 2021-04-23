@@ -4,4 +4,4 @@ export {Wafv2ApigwStack, IWafv2ApigwStack} from './Wafv2ApigwStack';
 export {BatchSfnStack, IBatchLogSfn} from './BatchLogSfnStack';
 export {EcsFargateStack, IEcsFargate} from './EcsFargateStack';
 export {EcrEcsFargateStack, IEcrEcsFargate} from './EcrEcsFargateStack';
-export {EcrTriggeredPipeline, IEcrTriggeredPipeline} from './EcrTriggeredPipeline';
+export {EventBridgeTriggeredPipeline, IEcrTriggeredPipeline} from './EcrTriggeredPipeline';
