@@ -1,0 +1,7 @@
+[
+  {
+    "Source": "example",
+    "Detail": "{ \"action-type\": \"PUSH\", \"result\": \"SUCCESS\", \"repository-name\": \"web\", \"image-tag\": \"prod\" }",
+    "DetailType": "ECR Image Action"
+  }
+]
