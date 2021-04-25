@@ -35,6 +35,7 @@
     "@aws-cdk/aws-codebuild": "^1.98.0",
     "@aws-cdk/aws-codepipeline": "^1.98.0",
     "@aws-cdk/aws-codepipeline-actions": "^1.98.0",
+    "@aws-cdk/aws-cognito": "^1.100.0",
     "@aws-cdk/aws-config": "^1.98.0",
     "@aws-cdk/aws-ecs-patterns": "^1.98.0",
     "@aws-cdk/aws-guardduty": "^1.98.0",
