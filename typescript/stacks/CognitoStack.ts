@@ -1,14 +1,14 @@
 import * as cdk from '@aws-cdk/core';
 import * as cognito from '@aws-cdk/aws-cognito';
 
-export interface IEcrEcsFargate {
+export interface ICognitoStack {
 	googleClientId?: string,
 	googleClientSecret?: string
 }
 
 
 export class CognitoStack extends cdk.Stack {
-	constructor(scope: cdk.App, id: string, params: IEcrEcsFargate, props?: cdk.StackProps) {
+	constructor(scope: cdk.App, id: string, params: ICognitoStack, props?: cdk.StackProps) {
 		super(scope, id, props);
 
 		const userPool = new cognito.UserPool(this, "userPool", {
