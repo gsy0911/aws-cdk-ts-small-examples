@@ -1,7 +1,4 @@
 import * as cdk from '@aws-cdk/core';
-// import * as ec2 from '@aws-cdk/aws-ec2';
-// import * as ecs from '@aws-cdk/aws-ecs';
-// import * as ecs_patterns from '@aws-cdk/aws-ecs-patterns';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as events from '@aws-cdk/aws-events';
@@ -10,13 +7,9 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as codebuild from "@aws-cdk/aws-codebuild";
 import {PythonFunction} from "@aws-cdk/aws-lambda-python";
 import * as lambda from "@aws-cdk/aws-lambda";
-// import * as codebuild from '@aws-cdk/aws-codebuild';
-// import * as lambda from '@aws-cdk/aws-lambda';
-// import { PythonFunction } from '@aws-cdk/aws-lambda-python';
-// import * as iam from '@aws-cdk/aws-iam';
-// import {getParams} from "../codepipeline-eb-blue-green-deploy/params";
 
-export interface IEcrTriggeredPipeline {
+
+export interface IEventBridgeTriggeredPipeline {
 	awsAccountId: string,
 	cloudwatchLogsLogStreamName: string,
 	gitTokenInSecretManagerARN: string,
@@ -30,7 +23,7 @@ export interface IEcrTriggeredPipeline {
 
 
 export class EventBridgeTriggeredPipeline extends cdk.Stack {
-	constructor(scope: cdk.App, id: string, params: IEcrTriggeredPipeline, props?: cdk.StackProps) {
+	constructor(scope: cdk.App, id: string, params: IEventBridgeTriggeredPipeline, props?: cdk.StackProps) {
 		super(scope, id, props);
 
         // S3 location
@@ -124,7 +117,7 @@ export class EventBridgeTriggeredPipeline extends cdk.Stack {
 					actions: [getCurrentDateAction],
 				},
 				{
-					stageName: 'BuildDockerAndDeployEB',
+					stageName: 'BuildDocker',
 					actions: [buildAction],
 				}
 			]
