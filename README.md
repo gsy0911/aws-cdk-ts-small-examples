@@ -42,6 +42,7 @@ $ cdk destroy {target_name}
 | [codepipeline-eb-blue-green-deploy](./typescript/codepipeline-eb-blue-green-deploy) | Create CI/CD flow with CodePipeline, CodeBuild for ElasticBeanstalk. |
 | [ec2-ismv2](./typescript/ec2-ismv2) | Add new VPC and EC2 with SSM |
 | [ecs-fargate](./typescript/ecs-fargate) | Add ECS Fargate execution environment, from demo container or ECR. |
+| [event-bridge-triggered-pipeline](./typescript/event-bridge-triggered-pipeline) | EventBridge-triggered pipeline to deploy ECS + Fargate from GitHub. It is recommended to use the example with `ecs-fargate` |
 | [guardduty-lambda](./typescript/guardduty-lambda) | Add chatbot to notify slack, and add lambda to be used as IPS. |
 | [http-proxy-apigateway](./typescript/http-proxy-apigateway) | copy from origin. |
 
