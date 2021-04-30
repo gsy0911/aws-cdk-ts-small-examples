@@ -72,7 +72,9 @@ export class EcrEcsFargateStack extends cdk.Stack {
 				// Blue/Green Deployment using CodeDeploy
 				type: ecs.DeploymentControllerType.CODE_DEPLOY
 			},
-			circuitBreaker: {rollback: true}
+			circuitBreaker: {rollback: true},
+			healthCheckGracePeriod: cdk.Duration.seconds(5)
 		});
+
 	}
 }
