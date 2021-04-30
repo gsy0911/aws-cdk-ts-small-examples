@@ -72,6 +72,8 @@ export class EcrEcsFargateStack extends cdk.Stack {
 				// Blue/Green Deployment using CodeDeploy
 				type: ecs.DeploymentControllerType.CODE_DEPLOY
 			},
+            minHealthyPercent: 50,
+            maxHealthyPercent: 200,
 			circuitBreaker: {rollback: true},
 			healthCheckGracePeriod: cdk.Duration.seconds(5)
 		});
