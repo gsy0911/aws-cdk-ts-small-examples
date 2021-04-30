@@ -108,24 +108,10 @@ export class EventBridgeTriggeredPipeline extends cdk.Stack {
 			}
 		});
 
-		/** deploy role used by DeploymentGroup */
-		const deployRole = new iam.Role(this, 'DeployRole', {
-			assumedBy: new iam.ServicePrincipal('codedeploy.amazonaws.com')
-		})
-		deployRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
-			resources: ['*'],
-			actions: [
-				'ec2:*',
-				'ecs:*',
-				'autoscaling:*',
-				'cloudwatch:*',
-				'logs:*'
-			]
-		}));
 		const deployApplication = new codeDeploy.EcsApplication(this, "ecs-application", {
 			applicationName: "ecs-blue-green-deployment"
 		})
+
 		/**
 		 * Currently, deployment group is not automatically created.
 		 * You should create deployment group after `$ cdk deploy`
@@ -140,7 +126,7 @@ export class EventBridgeTriggeredPipeline extends cdk.Stack {
 			actionName: "CodeDeploy",
 			deploymentGroup: deploymentGroup,
 			taskDefinitionTemplateFile: sourceOutput.atPath("taskdef.json"),
-			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml")
+			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml"),
 		})
 
 		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
