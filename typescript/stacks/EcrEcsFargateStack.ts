@@ -74,8 +74,7 @@ export class EcrEcsFargateStack extends cdk.Stack {
 			},
             minHealthyPercent: 50,
             maxHealthyPercent: 200,
-			circuitBreaker: {rollback: true},
-			healthCheckGracePeriod: cdk.Duration.seconds(5)
+			healthCheckGracePeriod: cdk.Duration.seconds(5),
 		});
 
 	}
