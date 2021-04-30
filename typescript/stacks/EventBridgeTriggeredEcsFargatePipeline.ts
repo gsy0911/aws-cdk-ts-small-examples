@@ -10,7 +10,7 @@ import {PythonFunction} from "@aws-cdk/aws-lambda-python";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 
-export interface IEventBridgeTriggeredPipeline {
+export interface IEventBridgeTriggeredEcsFargatePipeline {
 	awsAccountId: string,
 	cloudwatchLogsLogStreamName: string,
 	gitTokenInSecretManagerARN: string,
@@ -23,8 +23,8 @@ export interface IEventBridgeTriggeredPipeline {
 }
 
 
-export class EventBridgeTriggeredPipeline extends cdk.Stack {
-	constructor(scope: cdk.App, id: string, params: IEventBridgeTriggeredPipeline, props?: cdk.StackProps) {
+export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
+	constructor(scope: cdk.App, id: string, params: IEventBridgeTriggeredEcsFargatePipeline, props?: cdk.StackProps) {
 		super(scope, id, props);
 
 		// S3 location
