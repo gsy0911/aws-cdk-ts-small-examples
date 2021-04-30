@@ -8,9 +8,17 @@ import * as codeBuild from "@aws-cdk/aws-codebuild";
 import * as codeDeploy from '@aws-cdk/aws-codedeploy';
 import {PythonFunction} from "@aws-cdk/aws-lambda-python";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as ec2 from "@aws-cdk/aws-ec2";
+import * as ecs from "@aws-cdk/aws-ecs";
+import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
 
 
 export interface IEventBridgeTriggeredEcsFargatePipeline {
+	vpcId: string
+	env: {
+		account: string
+		region: string
+	},
 	awsAccountId: string,
 	cloudwatchLogsLogStreamName: string,
 	gitTokenInSecretManagerARN: string,
@@ -27,7 +35,74 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, params: IEventBridgeTriggeredEcsFargatePipeline, props?: cdk.StackProps) {
 		super(scope, id, props);
 
-		// S3 location
+		/**
+		 * ECS + Fargate Environment
+		 */
+		const vpc = ec2.Vpc.fromLookup(this, `existing-vpc-${id}`, {
+			vpcId: params.vpcId
+		})
+		const cluster = new ecs.Cluster(this, 'FargateCluster', {
+			vpc: vpc,
+			clusterName: "pipeline-fargate-cluster"
+		});
+
+		// create a task definition with CloudWatch Logs
+		const logging = new ecs.AwsLogDriver({
+			streamPrefix: "fargate-app",
+		})
+
+		const taskRole = new iam.Role(this, 'taskRole', {
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+		})
+		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
+		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
+			memoryLimitMiB: 512,
+			cpu: 256,
+			taskRole: taskRole
+		})
+
+		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
+		// So, use `localhost:port` instead.
+		taskDef.addContainer("NodeContainer", {
+			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_node"),
+			portMappings: [
+				{
+					containerPort: 8080,
+					hostPort: 8080
+				}
+			],
+			logging,
+		})
+		taskDef.addContainer("NginxContainer", {
+			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_nginx"),
+			portMappings: [
+				{
+					containerPort: 80,
+					hostPort: 80
+				}
+			],
+			logging,
+		})
+
+		// Instantiate Fargate Service with just cluster and image
+		new ecs_patterns.ApplicationMultipleTargetGroupsFargateService(this, "MultipleFargateService", {
+			cluster: cluster,
+			assignPublicIp: true,
+			taskDefinition: taskDef,
+			healthCheckGracePeriod: cdk.Duration.seconds(5),
+			// targetGroups: [
+			// 	{
+			// 		containerPort: 3000
+			// 	},
+			// 	{
+			// 		containerPort: 8000
+			// 	}
+			// ]
+		})
+
+		/**
+		 * CodePipeline
+		 */
 		const sourceOutput = new codepipeline.Artifact();
 		const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
 		const sourceAction = new codepipeline_actions.GitHubSourceAction({

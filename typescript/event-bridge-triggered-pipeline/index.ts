@@ -4,6 +4,6 @@ import {params} from './params';
 
 
 const app = new cdk.App();
-new EventBridgeTriggeredEcsFargatePipeline(app, "EventBridgeTriggeredPipeline", params, {description: "ts-example: from example"});
+new EventBridgeTriggeredEcsFargatePipeline(app, "EventBridgeTriggeredPipeline", params, {description: "ts-example: from example", env: params.env});
 
 app.synth();
