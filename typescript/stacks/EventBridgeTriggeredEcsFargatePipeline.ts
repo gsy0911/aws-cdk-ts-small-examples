@@ -58,11 +58,14 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
-			taskRole: taskRole
+			taskRole: taskRole,
+			// set same name as taskdef.json in repository.
+			family: "EcsFargatePipeline",
 		})
 
 		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
 		// So, use `localhost:port` instead.
+		// set `id` as same as ContainerName of LoadBalancerInfo in `appspec.yaml`
 		taskDef.addContainer("NodeContainer", {
 			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_node"),
 			portMappings: [
@@ -92,10 +95,10 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
-
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
+			loadBalancerName: "EcsFargateALB",
 			vpc: vpc,
 			idleTimeout: cdk.Duration.seconds(30),
 			// scheme: true to access from external internet
@@ -106,6 +109,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 		})
 
 		listener80.addTargets("ecs-fargate", {
+			targetGroupName: "Blue-HttpNginx",
 			port: 80,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
@@ -116,6 +120,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 			port: 8080,
 		})
 		listener8080.addTargets("ecs-fargate-8080", {
+			targetGroupName: "Green-HttpTextNode",
 			port: 8080,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
@@ -127,7 +132,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 		const sourceOutput = new codepipeline.Artifact();
 		const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
 		const sourceAction = new codepipeline_actions.GitHubSourceAction({
-			actionName: 'GitHub_Source',
+			actionName: 'GitHubSource',
 			owner: params.gitOwner,
 			repo: params.gitRepoName,
 			oauthToken: oauth,
