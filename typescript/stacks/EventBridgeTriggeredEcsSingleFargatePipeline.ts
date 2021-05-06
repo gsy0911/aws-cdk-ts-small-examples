@@ -52,6 +52,7 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		})
 
 		const taskRole = new iam.Role(this, 'taskRole', {
+			roleName: "ecsTaskExecutionRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
 		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))

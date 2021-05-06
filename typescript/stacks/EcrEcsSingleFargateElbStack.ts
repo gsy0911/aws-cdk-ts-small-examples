@@ -37,7 +37,7 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
-			taskRole: taskRole
+			taskRole: taskRole,
 		})
 
 		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
@@ -55,6 +55,7 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 				}
 			],
 			logging,
+
 		})
 
 		const service = new ecs.FargateService(this, "FargateService", {
@@ -65,11 +66,10 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
-
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
-			loadBalancerName: "EcsFargateALB",
+			loadBalancerName: "EcsSingleFargateALB",
 			vpc: vpc,
 			idleTimeout: cdk.Duration.seconds(30),
 			// scheme: true to access from external internet
