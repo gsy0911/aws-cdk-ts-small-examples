@@ -22,7 +22,7 @@ export class EcrEcsFargateElbStack extends cdk.Stack {
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
 			vpc: vpc,
-			clusterName: "fargate-cluster"
+			clusterName: "fargate-elb-cluster"
 		});
 
 		// create a task definition with CloudWatch Logs
@@ -76,7 +76,9 @@ export class EcrEcsFargateElbStack extends cdk.Stack {
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
 			vpc: vpc,
-			idleTimeout: cdk.Duration.seconds(30)
+			idleTimeout: cdk.Duration.seconds(30),
+			// scheme: true to access from external internet
+			internetFacing: true,
 		})
 		const listener80 = alb.addListener("listener", {
 			port: 80,
@@ -87,14 +89,5 @@ export class EcrEcsFargateElbStack extends cdk.Stack {
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
 		})
-		const listener8080 = alb.addListener("listener8080", {
-			port: 8080
-		})
-		listener8080.addTargets("ecs-fargate-8080", {
-			port: 8080,
-			deregistrationDelay: cdk.Duration.seconds(30),
-			targets: [service]
-		})
-
 	}
 }
