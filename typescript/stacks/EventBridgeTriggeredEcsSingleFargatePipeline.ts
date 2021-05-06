@@ -31,7 +31,7 @@ export interface IEventBridgeTriggeredEcsFargatePipeline {
 }
 
 
-export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
+export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, params: IEventBridgeTriggeredEcsFargatePipeline, props?: cdk.StackProps) {
 		super(scope, id, props);
 
@@ -72,13 +72,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 				{
 					containerPort: 8080,
 					hostPort: 8080
-				}
-			],
-			logging,
-		})
-		taskDef.addContainer("NginxContainer", {
-			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_nginx"),
-			portMappings: [
+				},
 				{
 					containerPort: 80,
 					hostPort: 80
@@ -104,23 +98,23 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 			// scheme: true to access from external internet
 			internetFacing: true,
 		})
-		const listener80 = alb.addListener("listener", {
+		const listener80 = alb.addListener("listener-80", {
 			port: 80,
 		})
 
-		listener80.addTargets("ecs-fargate", {
-			targetGroupName: "Blue-HttpNginx",
+		listener80.addTargets("ecs-fargate-80", {
+			targetGroupName: "Blue-80-port",
 			port: 80,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
 		})
 
 		// required to use CodeDeploy, at least two different target-group
-		const listener8080 = alb.addListener("listener8080", {
+		const listener8080 = alb.addListener("listener-8080", {
 			port: 8080,
 		})
 		listener8080.addTargets("ecs-fargate-8080", {
-			targetGroupName: "Green-HttpTextNode",
+			targetGroupName: "Green-8080-port",
 			port: 8080,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
@@ -169,7 +163,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 		/** Policy to access SecretsManager */
 		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'CodeBuildSecretsManagerAccess', 'arn:aws:iam::aws:policy/SecretsManagerReadWrite'))
 
-		// to build docker in CodeBuild, set priviledged True
+		// to build docker in CodeBuild, set privileged True
 		const codeBuildCache = codeBuild.Cache.local(codeBuild.LocalCacheMode.DOCKER_LAYER)
 		const project = new codeBuild.PipelineProject(this, 'MyProject', {
 			environment: {

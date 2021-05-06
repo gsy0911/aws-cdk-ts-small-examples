@@ -5,5 +5,5 @@ export {BatchSfnStack, IBatchLogSfn} from './BatchLogSfnStack';
 export {EcsFargateStack, IEcsFargate} from './EcsFargateStack';
 export {EcrEcsFargateStack, IEcrEcsFargate} from './EcrEcsFargateStack';
 export {EcrEcsFargateElbStack, IEcrEcsFargateElb} from './EcrEcsFargateElbStack';
-export {EventBridgeTriggeredEcsFargatePipeline, IEventBridgeTriggeredEcsFargatePipeline} from './EventBridgeTriggeredEcsFargatePipeline';
+export {EventBridgeTriggeredEcsSingleFargatePipeline, IEventBridgeTriggeredEcsFargatePipeline} from './EventBridgeTriggeredEcsSingleFargatePipeline';
 export {EcrEcsSingleFargateElbStack} from './EcrEcsSingleFargateElbStack';
