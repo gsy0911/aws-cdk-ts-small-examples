@@ -111,6 +111,16 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 			targets: [service],
 		})
 
+		// required to use CodeDeploy, at least two different target-group
+		const listener8080 = alb.addListener("listener8080", {
+			port: 8080,
+		})
+		listener8080.addTargets("ecs-fargate-8080", {
+			port: 8080,
+			deregistrationDelay: cdk.Duration.seconds(30),
+			targets: [service],
+		})
+
 		/**
 		 * CodePipeline
 		 */
