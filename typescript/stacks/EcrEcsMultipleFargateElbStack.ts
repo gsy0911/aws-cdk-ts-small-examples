@@ -13,7 +13,7 @@ export interface IEcrEcsFargateElb {
 }
 
 
-export class EcrEcsFargateElbStack extends cdk.Stack {
+export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, params: IEcrEcsFargateElb, props?: cdk.StackProps) {
 		super(scope, id, props);
 
@@ -22,7 +22,10 @@ export class EcrEcsFargateElbStack extends cdk.Stack {
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
 			vpc: vpc,
-			clusterName: "fargate-elb-cluster"
+			clusterName: "fargate-elb-cluster",
+			defaultCloudMapNamespace: {
+				name: "cdk.example.com."
+			}
 		});
 
 		// create a task definition with CloudWatch Logs
