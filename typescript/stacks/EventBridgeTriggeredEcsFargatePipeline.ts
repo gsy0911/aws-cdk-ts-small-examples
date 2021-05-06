@@ -10,7 +10,7 @@ import {PythonFunction} from "@aws-cdk/aws-lambda-python";
 import * as lambda from "@aws-cdk/aws-lambda";
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
-import * as ecs_patterns from "@aws-cdk/aws-ecs-patterns";
+import * as elb from '@aws-cdk/aws-elasticloadbalancingv2';
 
 
 export interface IEventBridgeTriggeredEcsFargatePipeline {
@@ -43,7 +43,7 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
 			vpc: vpc,
-			clusterName: "pipeline-fargate-cluster"
+			clusterName: "fargate-elb-pipeline-cluster"
 		});
 
 		// create a task definition with CloudWatch Logs
@@ -84,20 +84,31 @@ export class EventBridgeTriggeredEcsFargatePipeline extends cdk.Stack {
 			logging,
 		})
 
-		// Instantiate Fargate Service with just cluster and image
-		new ecs_patterns.ApplicationMultipleTargetGroupsFargateService(this, "MultipleFargateService", {
+		const service = new ecs.FargateService(this, "FargateService", {
 			cluster: cluster,
-			assignPublicIp: true,
 			taskDefinition: taskDef,
+			deploymentController: {
+				type: ecs.DeploymentControllerType.CODE_DEPLOY
+			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
-			// targetGroups: [
-			// 	{
-			// 		containerPort: 3000
-			// 	},
-			// 	{
-			// 		containerPort: 8000
-			// 	}
-			// ]
+			assignPublicIp: true,
+
+		})
+
+		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
+			vpc: vpc,
+			idleTimeout: cdk.Duration.seconds(30),
+			// scheme: true to access from external internet
+			internetFacing: true,
+		})
+		const listener80 = alb.addListener("listener", {
+			port: 80,
+		})
+
+		listener80.addTargets("ecs-fargate", {
+			port: 80,
+			deregistrationDelay: cdk.Duration.seconds(30),
+			targets: [service],
 		})
 
 		/**
