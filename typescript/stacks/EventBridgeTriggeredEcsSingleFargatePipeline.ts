@@ -51,15 +51,23 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			streamPrefix: "fargate-app",
 		})
 
-		const taskRole = new iam.Role(this, 'taskRole', {
-			roleName: "ecsTaskExecutionRole",
+		const executionRole = new iam.Role(this, 'executionRole', {
+			roleName: "ecsExecutionRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
-		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "for_code_deploy", "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_power_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"))
+
+		const taskRole = new iam.Role(this, 'taskRole', {
+			roleName: "ecsTaskRole",
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+		})
+		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access_task", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
-			taskRole: taskRole,
+			// taskRole: taskRole,
 			// set same name as taskdef.json in repository.
 			family: "EcsFargatePipeline",
 		})
@@ -218,11 +226,68 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			deploymentConfig: codeDeploy.EcsDeploymentConfig.ALL_AT_ONCE
 		})
 
+		/**
+		 * DeployActionRole
+		 * see: https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/codedeploy_IAM_role.html
+		 */
+		const deployActionRole = new iam.Role(this, 'deployActionRole', {
+			roleName: "ecsCodeDeployRole",
+			assumedBy: new iam.ServicePrincipal('codedeploy.amazonaws.com')
+		})
+		deployActionRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ["*"],
+			actions: [
+				"ecs:DescribeServices",
+				"ecs:CreateTaskSet",
+				"ecs:UpdateServicePrimaryTaskSet",
+				"ecs:DeleteTaskSet",
+				"elasticloadbalancing:DescribeTargetGroups",
+				"elasticloadbalancing:DescribeListeners",
+				"elasticloadbalancing:ModifyListener",
+				"elasticloadbalancing:DescribeRules",
+				"elasticloadbalancing:ModifyRule",
+				"lambda:InvokeFunction",
+				"cloudwatch:DescribeAlarms",
+				"sns:Publish",
+				"s3:GetObject*",
+				"s3:GetObjectVersion",
+				"s3:GetBucket*",
+				"s3:List*"
+			],
+		}))
+		deployActionRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ["*"],
+			actions: [
+				"iam:PassRole"
+			],
+			conditions: {
+				StringLike: {"iam:PassedToService": "ecs-tasks.amazonaws.com"}
+			}
+		}))
+		deployActionRole.addToPolicy(new iam.PolicyStatement({
+			effect: iam.Effect.ALLOW,
+			resources: ["*"],
+			actions: [
+				"codedeploy:Get*",
+				"codedeploy:RegisterApplicationRevision",
+				"kms:Decrypt",
+				"kms:DescribeKey"
+			],
+			sid: "additionalActions"
+		}))
+		// deployActionRole.addToPolicy(new iam.PolicyStatement({
+		// 	effect: iam.Effect.ALLOW,
+		// 	resources: [""],
+		// 	actions: ["iam:PassRole"]
+		// }))
 		const deployAction = new codepipeline_actions.CodeDeployEcsDeployAction({
 			actionName: "CodeDeploy",
 			deploymentGroup: deploymentGroup,
 			taskDefinitionTemplateFile: sourceOutput.atPath("taskdef.json"),
 			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml"),
+			role: deployActionRole
 		})
 
 		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
