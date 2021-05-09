@@ -148,9 +148,9 @@ export class BatchSfnStack extends cdk.Stack {
 
 		/**  */
 		const sfnBatchTask = new stepfunctions_tasks.BatchSubmitJob(this, `${params.environment}-sfn-task-batch`, {
-			jobDefinition: batchJobDefinition,
+			jobDefinitionArn: batchJobDefinition.jobDefinitionArn,
 			jobName: `${params.environment}-batch-job-environment`,
-			jobQueue: batchJobQueue,
+			jobQueueArn: batchJobQueue.jobQueueArn,
 			containerOverrides: {
 				command: [
 					"python", "example.py",
