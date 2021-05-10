@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
+import * as iam from "@aws-cdk/aws-iam";
 import * as ecs_patterns from '@aws-cdk/aws-ecs-patterns';
 
 export interface IEcrEcsFargate {
@@ -29,9 +30,14 @@ export class EcrEcsFargateStack extends cdk.Stack {
 			streamPrefix: "myapp",
 		})
 
+		const taskRole = new iam.Role(this, 'taskRole', {
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+		})
+		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
+			taskRole: taskRole
 		})
 
 		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
@@ -66,7 +72,10 @@ export class EcrEcsFargateStack extends cdk.Stack {
 				// Blue/Green Deployment using CodeDeploy
 				type: ecs.DeploymentControllerType.CODE_DEPLOY
 			},
-			circuitBreaker: {rollback: true}
+            minHealthyPercent: 50,
+            maxHealthyPercent: 200,
+			healthCheckGracePeriod: cdk.Duration.seconds(5),
 		});
+
 	}
 }
