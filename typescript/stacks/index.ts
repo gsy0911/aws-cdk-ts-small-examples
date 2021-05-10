@@ -7,3 +7,4 @@ export {EcrEcsFargateStack, IEcrEcsFargate} from './EcrEcsFargateStack';
 export {EcrEcsMultipleFargateElbStack, IEcrEcsFargateElb} from './EcrEcsMultipleFargateElbStack';
 export {EventBridgeTriggeredEcsSingleFargatePipeline, IEventBridgeTriggeredEcsFargatePipeline} from './EventBridgeTriggeredEcsSingleFargatePipeline';
 export {EcrEcsSingleFargateElbStack} from './EcrEcsSingleFargateElbStack';
+export {CognitoStack, ICognitoStack} from './CognitoStack';
