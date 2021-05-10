@@ -22,7 +22,10 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
 			vpc: vpc,
-			clusterName: "fargate-elb-cluster"
+			clusterName: "fargate-elb-cluster",
+			defaultCloudMapNamespace: {
+				name: "cdk.example.com."
+			}
 		});
 
 		// create a task definition with CloudWatch Logs
@@ -48,10 +51,6 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 				{
 					containerPort: 8080,
 					hostPort: 8080
-				},
-				{
-					containerPort: 80,
-					hostPort: 80
 				}
 			],
 			logging,
@@ -75,26 +74,33 @@ export class EcrEcsSingleFargateElbStack extends cdk.Stack {
 			// scheme: true to access from external internet
 			internetFacing: true,
 		})
-		const listener80 = alb.addListener("listener80", {
-			port: 80,
+		const listenerHttp1 = alb.addListener("listener-http-1", {
+			protocol: elb.ApplicationProtocol.HTTP
 		})
 
-		listener80.addTargets("ecs-fargate-80", {
-			targetGroupName: "Blue-80-port",
-			port: 80,
+		listenerHttp1.addTargets("http-blue-target", {
+			targetGroupName: "http-blue-target",
+			protocol: elb.ApplicationProtocol.HTTP,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
+			healthCheck: {
+				healthyThresholdCount: 2,
+				interval: cdk.Duration.seconds(10)
+			}
 		})
 
-		// required to use CodeDeploy, at least two different target-group
-		const listener8080 = alb.addListener("listener8080", {
+		const listenerHttp2 = alb.addListener("listener-http-2", {
 			port: 8080,
 		})
-		listener8080.addTargets("ecs-fargate-8080", {
-			targetGroupName: "Green-8080-port",
+		listenerHttp2.addTargets("http-green-target", {
+			targetGroupName: "http-green-target",
 			port: 8080,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targets: [service],
+			healthCheck: {
+				healthyThresholdCount: 2,
+				interval: cdk.Duration.seconds(10)
+			}
 		})
 	}
 }
