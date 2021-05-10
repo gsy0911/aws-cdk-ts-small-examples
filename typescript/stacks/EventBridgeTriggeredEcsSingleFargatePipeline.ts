@@ -166,6 +166,7 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		 * Build action
 		 */
 		const buildRole = new iam.Role(this, 'BuildRole', {
+			roleName: `${id}-BuildRole`,
 			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
 		})
 		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
@@ -231,7 +232,7 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		 * see: https://docs.aws.amazon.com/ja_jp/AmazonECS/latest/developerguide/codedeploy_IAM_role.html
 		 */
 		const deployActionRole = new iam.Role(this, 'deployActionRole', {
-			roleName: "ecsCodeDeployRole",
+			roleName: `${id}-deployActionRole`,
 			assumedBy: new iam.ServicePrincipal('codedeploy.amazonaws.com')
 		})
 		deployActionRole.addToPolicy(new iam.PolicyStatement({
@@ -277,18 +278,18 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			],
 			sid: "additionalActions"
 		}))
-		// deployActionRole.addToPolicy(new iam.PolicyStatement({
-		// 	effect: iam.Effect.ALLOW,
-		// 	resources: [""],
-		// 	actions: ["iam:PassRole"]
-		// }))
 		const deployAction = new codepipeline_actions.CodeDeployEcsDeployAction({
 			actionName: "CodeDeploy",
 			deploymentGroup: deploymentGroup,
 			taskDefinitionTemplateFile: sourceOutput.atPath("taskdef.json"),
 			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml"),
-			role: deployActionRole
 		})
+
+		const pipelineRole = new iam.Role(this, 'pipelineRole', {
+			roleName: `${id}-pipelineRole`,
+			assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com')
+		})
+		// pipelineRole.grantPassRole(sourceAction.actionProperties.role)
 
 		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
 			pipelineName: "EventBridgeTriggeredDeployPipeline",
@@ -297,17 +298,17 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 					stageName: 'Source',
 					actions: [sourceAction],
 				},
-				{
-					stageName: 'GetDockerImageTag',
-					actions: [getCurrentDateAction],
-				},
-				{
-					stageName: 'BuildDocker',
-					actions: [buildAction],
-				},
+				// {
+				// 	stageName: 'GetDockerImageTag',
+				// 	actions: [getCurrentDateAction],
+				// },
+				// {
+				// 	stageName: 'BuildDocker',
+				// 	actions: [buildAction],
+				// },
 				{
 					stageName: 'DeployEcs',
-					actions: [deployAction]
+					actions: [deployAction],
 				}
 			]
 		});
