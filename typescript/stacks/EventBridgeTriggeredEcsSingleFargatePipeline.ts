@@ -139,7 +139,7 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		/**
 		 * CodePipeline
 		 */
-		const sourceOutput = new codepipeline.Artifact();
+		const sourceOutput = new codepipeline.Artifact(`${id}-pipeline-artifact-${params.awsAccountId}`);
 		const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
 		const sourceAction = new codepipeline_actions.GitHubSourceAction({
 			actionName: 'GitHubSource',
@@ -292,12 +292,6 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			taskDefinitionTemplateFile: sourceOutput.atPath("taskdef.json"),
 			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml"),
 		})
-
-		const pipelineRole = new iam.Role(this, 'pipelineRole', {
-			roleName: `${id}-pipelineRole`,
-			assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com')
-		})
-		// pipelineRole.grantPassRole(sourceAction.actionProperties.role)
 
 		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
 			pipelineName: "EventBridgeTriggeredDeployPipeline",
