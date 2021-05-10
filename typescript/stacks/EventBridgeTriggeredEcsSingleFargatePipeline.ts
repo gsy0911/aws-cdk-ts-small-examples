@@ -106,34 +106,46 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			// scheme: true to access from external internet
 			internetFacing: true,
 		})
-		const listenerHttp1 = alb.addListener("listener-http-1", {
-			protocol: elb.ApplicationProtocol.HTTP
-		})
 
-		listenerHttp1.addTargets("http-blue-target", {
+		const targetGroupBlue = new elb.ApplicationTargetGroup(this, "http-blue-target", {
+			vpc: vpc,
 			targetGroupName: "http-blue-target",
 			protocol: elb.ApplicationProtocol.HTTP,
 			deregistrationDelay: cdk.Duration.seconds(30),
+			targetType: elb.TargetType.IP,
 			targets: [service],
 			healthCheck: {
 				healthyThresholdCount: 2,
 				interval: cdk.Duration.seconds(10)
 			}
+		})
+
+		const targetGroupGreen = new elb.ApplicationTargetGroup(this, "http-green-target", {
+			vpc: vpc,
+			targetGroupName: "http-green-target",
+			protocol: elb.ApplicationProtocol.HTTP,
+			deregistrationDelay: cdk.Duration.seconds(30),
+			targetType: elb.TargetType.IP,
+			targets: [],
+			healthCheck: {
+				healthyThresholdCount: 2,
+				interval: cdk.Duration.seconds(10)
+			}
+		})
+
+		const listenerHttp1 = alb.addListener("listener-http-1", {
+			protocol: elb.ApplicationProtocol.HTTP
+		})
+		listenerHttp1.addTargetGroups("listener-1-group", {
+			targetGroups: [targetGroupBlue]
 		})
 
 		/** MUST set green environment as 2nd target group */
 		const listenerHttp2 = alb.addListener("listener-http-2", {
 			port: 8080,
 		})
-		listenerHttp2.addTargets("http-green-target", {
-			targetGroupName: "http-green-target",
-			protocol: elb.ApplicationProtocol.HTTP,
-			deregistrationDelay: cdk.Duration.seconds(30),
-			targets: [service],
-			healthCheck: {
-				healthyThresholdCount: 2,
-				interval: cdk.Duration.seconds(10)
-			}
+		listenerHttp2.addTargetGroups("listener-2-group", {
+			targetGroups: [targetGroupGreen],
 		})
 
 		/**
