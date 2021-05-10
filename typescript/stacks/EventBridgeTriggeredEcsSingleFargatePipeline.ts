@@ -79,12 +79,12 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_node"),
 			portMappings: [
 				{
-					containerPort: 8080,
-					hostPort: 8080
-				},
-				{
 					containerPort: 80,
 					hostPort: 80
+				},
+				{
+					containerPort: 8080,
+					hostPort: 8080
 				}
 			],
 			logging,
@@ -298,10 +298,10 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 					stageName: 'Source',
 					actions: [sourceAction],
 				},
-				// {
-				// 	stageName: 'GetDockerImageTag',
-				// 	actions: [getCurrentDateAction],
-				// },
+				{
+					stageName: 'GetDockerImageTag',
+					actions: [getCurrentDateAction],
+				},
 				// {
 				// 	stageName: 'BuildDocker',
 				// 	actions: [buildAction],
