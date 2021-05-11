@@ -3,7 +3,6 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
 import * as iam from "@aws-cdk/aws-iam";
 import * as elb from '@aws-cdk/aws-elasticloadbalancingv2';
-import {DnsRecordType} from "@aws-cdk/aws-servicediscovery";
 
 export interface IEcrEcsFargateElb {
 	vpcId: string
@@ -25,7 +24,7 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 			vpc: vpc,
 			clusterName: "fargate-elb-cluster",
 			defaultCloudMapNamespace: {
-				name: "cdk.example.com."
+				name: "cdk.ts."
 			},
 			// only support `FARGATE` or `FARGATE_SPOT`.
 			capacityProviders: ["FARGATE_SPOT"]
@@ -80,8 +79,6 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 			// internal A-recode like `node.cdk.example.com`
 			cloudMapOptions: {
 				name: "node",
-				dnsTtl: cdk.Duration.seconds(10),
-				dnsRecordType: DnsRecordType.A
 			}
 		})
 
@@ -96,6 +93,8 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
 		// So, use `localhost:port` instead.
 		taskNginx.addContainer("NginxContainer", {
+			// hostname is not supported when it is `awsvpc` (i.e. fargate)
+			// hostname: "nginx-container",
 			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_nginx"),
 			portMappings: [
 				{
@@ -104,7 +103,6 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 				}
 			],
 			logging,
-
 		})
 
 		const serviceNginx = new ecs.FargateService(this, "FargateServiceNginx", {
