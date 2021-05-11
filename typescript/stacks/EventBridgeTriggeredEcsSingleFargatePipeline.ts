@@ -58,19 +58,18 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			roleName: "ecsExecutionRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "for_code_deploy", "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"))
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_power_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "cloudwatch_logs_access", "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_read_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"))
 
 		const taskRole = new iam.Role(this, 'taskRole', {
 			roleName: "ecsTaskRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
-		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access_task", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
-			// taskRole: taskRole,
+			executionRole: executionRole,
+			taskRole: taskRole,
 			// set same name as taskdef.json in repository.
 			family: "EcsFargatePipeline",
 		})
@@ -97,6 +96,9 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
+			cloudMapOptions: {
+				name: "cdk.example.com."
+			}
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
