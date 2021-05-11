@@ -46,7 +46,9 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			clusterName: "fargate-elb-pipeline-cluster",
 			defaultCloudMapNamespace: {
 				name: "cdk.example.com."
-			}
+			},
+			// only support `FARGATE` or `FARGATE_SPOT`.
+			capacityProviders: ["FARGATE_SPOT"]
 		});
 
 		// create a task definition with CloudWatch Logs
