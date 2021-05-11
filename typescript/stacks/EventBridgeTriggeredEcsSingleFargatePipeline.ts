@@ -96,8 +96,9 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
+			// internal A-recode like `node.cdk.example.com`
 			cloudMapOptions: {
-				name: "cdk.example.com."
+				name: "node"
 			}
 		})
 
@@ -122,6 +123,7 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			}
 		})
 
+		/** MUST set green environment as 2nd target group */
 		const targetGroupGreen = new elb.ApplicationTargetGroup(this, "http-green-target", {
 			vpc: vpc,
 			targetGroupName: "http-green-target",
@@ -142,12 +144,11 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			targetGroups: [targetGroupBlue]
 		})
 
-		/** MUST set green environment as 2nd target group */
 		const listenerHttp2 = alb.addListener("listener-http-2", {
 			port: 8080,
 		})
 		listenerHttp2.addTargetGroups("listener-2-group", {
-			targetGroups: [targetGroupGreen],
+			targetGroups: [targetGroupGreen]
 		})
 
 		/**
