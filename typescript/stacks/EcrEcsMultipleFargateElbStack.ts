@@ -3,6 +3,7 @@ import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
 import * as iam from "@aws-cdk/aws-iam";
 import * as elb from '@aws-cdk/aws-elasticloadbalancingv2';
+import {DnsRecordType} from "@aws-cdk/aws-servicediscovery";
 
 export interface IEcrEcsFargateElb {
 	vpcId: string
@@ -78,7 +79,9 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 			assignPublicIp: true,
 			// internal A-recode like `node.cdk.example.com`
 			cloudMapOptions: {
-				name: "node"
+				name: "node",
+				dnsTtl: cdk.Duration.seconds(10),
+				dnsRecordType: DnsRecordType.A
 			}
 		})
 
@@ -112,6 +115,10 @@ export class EcrEcsMultipleFargateElbStack extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
+			// internal A-recode like `nginx.cdk.example.com`
+			cloudMapOptions: {
+				name: "nginx"
+			},
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
