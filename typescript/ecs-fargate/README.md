@@ -18,3 +18,7 @@ The list below shows ecs-stacks difference that you can deploy here.
 * [docker image](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-cli-tutorial-fargate.html)
 * [fargate-application-load-balanced-service](https://github.com/aws-samples/aws-cdk-examples/tree/master/typescript/ecs/fargate-application-load-balanced-service)
 * [fargate-service-with-logging](https://github.com/aws-samples/aws-cdk-examples/tree/master/typescript/ecs/fargate-service-with-logging)
+
+* [docker-compose.yml の uWSGI, Nginx, Flask アプリを ECS Fargateで動かす](https://dev.classmethod.jp/articles/from-uwsgiflask-docker-compose-yml-to-fargate-for-begineer/)
+* [docker-compose.ymlを使って AWSFargateへデプロイ](https://hacknote.jp/archives/57856/)
+* [ECS での Docker コンテナーのデプロイ](https://matsuand.github.io/docs.docker.jp.onthefly/cloud/ecs-integration/)

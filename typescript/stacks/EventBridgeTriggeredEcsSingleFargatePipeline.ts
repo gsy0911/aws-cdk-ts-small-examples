@@ -46,7 +46,9 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			clusterName: "fargate-elb-pipeline-cluster",
 			defaultCloudMapNamespace: {
 				name: "cdk.example.com."
-			}
+			},
+			// only support `FARGATE` or `FARGATE_SPOT`.
+			capacityProviders: ["FARGATE_SPOT"]
 		});
 
 		// create a task definition with CloudWatch Logs
@@ -58,19 +60,18 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			roleName: "ecsExecutionRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "for_code_deploy", "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"))
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_power_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "cloudwatch_logs_access", "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"))
+		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_read_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"))
 
 		const taskRole = new iam.Role(this, 'taskRole', {
 			roleName: "ecsTaskRole",
 			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
 		})
-		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access_task", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
 		const taskDef = new ecs.FargateTaskDefinition(this, "MyTaskDefinition", {
 			memoryLimitMiB: 512,
 			cpu: 256,
-			// taskRole: taskRole,
+			executionRole: executionRole,
+			taskRole: taskRole,
 			// set same name as taskdef.json in repository.
 			family: "EcsFargatePipeline",
 		})
@@ -97,6 +98,10 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
+			// internal A-recode like `node.cdk.example.com`
+			cloudMapOptions: {
+				name: "node"
+			}
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
@@ -106,14 +111,13 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			// scheme: true to access from external internet
 			internetFacing: true,
 		})
-		const listenerHttp1 = alb.addListener("listener-http-1", {
-			protocol: elb.ApplicationProtocol.HTTP
-		})
 
-		listenerHttp1.addTargets("http-blue-target", {
+		const targetGroupBlue = new elb.ApplicationTargetGroup(this, "http-blue-target", {
+			vpc: vpc,
 			targetGroupName: "http-blue-target",
 			protocol: elb.ApplicationProtocol.HTTP,
 			deregistrationDelay: cdk.Duration.seconds(30),
+			targetType: elb.TargetType.IP,
 			targets: [service],
 			healthCheck: {
 				healthyThresholdCount: 2,
@@ -122,24 +126,37 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		})
 
 		/** MUST set green environment as 2nd target group */
-		const listenerHttp2 = alb.addListener("listener-http-2", {
-			port: 8080,
-		})
-		listenerHttp2.addTargets("http-green-target", {
+		const targetGroupGreen = new elb.ApplicationTargetGroup(this, "http-green-target", {
+			vpc: vpc,
 			targetGroupName: "http-green-target",
 			protocol: elb.ApplicationProtocol.HTTP,
 			deregistrationDelay: cdk.Duration.seconds(30),
-			targets: [service],
+			targetType: elb.TargetType.IP,
+			targets: [],
 			healthCheck: {
 				healthyThresholdCount: 2,
 				interval: cdk.Duration.seconds(10)
 			}
 		})
 
+		const listenerHttp1 = alb.addListener("listener-http-1", {
+			protocol: elb.ApplicationProtocol.HTTP
+		})
+		listenerHttp1.addTargetGroups("listener-1-group", {
+			targetGroups: [targetGroupBlue]
+		})
+
+		const listenerHttp2 = alb.addListener("listener-http-2", {
+			port: 8080,
+		})
+		listenerHttp2.addTargetGroups("listener-2-group", {
+			targetGroups: [targetGroupGreen]
+		})
+
 		/**
 		 * CodePipeline
 		 */
-		const sourceOutput = new codepipeline.Artifact();
+		const sourceOutput = new codepipeline.Artifact(`${id}-pipeline-artifact-${params.awsAccountId}`);
 		const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
 		const sourceAction = new codepipeline_actions.GitHubSourceAction({
 			actionName: 'GitHubSource',
@@ -292,12 +309,6 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 			taskDefinitionTemplateFile: sourceOutput.atPath("taskdef.json"),
 			appSpecTemplateFile: sourceOutput.atPath("appspec.yaml"),
 		})
-
-		const pipelineRole = new iam.Role(this, 'pipelineRole', {
-			roleName: `${id}-pipelineRole`,
-			assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com')
-		})
-		// pipelineRole.grantPassRole(sourceAction.actionProperties.role)
 
 		const pipeline = new codepipeline.Pipeline(this, 'DeployPipeline', {
 			pipelineName: "EventBridgeTriggeredDeployPipeline",
