@@ -26,8 +26,6 @@ export class EcrEcsMultipleFargateElbStack1 extends cdk.Stack {
 					cidrMask: 28,
 				}
 			],
-			enableDnsHostnames: true,
-			enableDnsSupport: true
 		})
 
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {

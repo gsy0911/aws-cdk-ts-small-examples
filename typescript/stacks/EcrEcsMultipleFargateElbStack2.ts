@@ -69,7 +69,6 @@ export class EcrEcsMultipleFargateElbStack2 extends cdk.Stack {
 		// So, use `localhost:port` instead.
 		taskNginx.addContainer("NginxContainer", {
 			// hostname is not supported when it is `awsvpc` (i.e. fargate)
-			// hostname: "nginx-container",
 			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_nginx"),
 			portMappings: [
 				{
@@ -88,10 +87,6 @@ export class EcrEcsMultipleFargateElbStack2 extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
-			// internal A-recode like `nginx.cdk.example.com`
-			cloudMapOptions: {
-				name: "nginx"
-			},
 		})
 
 		const taskApp = new ecs.FargateTaskDefinition(this, "task-app", {
@@ -103,13 +98,13 @@ export class EcrEcsMultipleFargateElbStack2 extends cdk.Stack {
 		})
 
 		// in Fargate, `Link` is disabled because only `awsvpc` mode supported.
-		// So, use `localhost:port` instead.
 		taskApp.addContainer("PythonContainer", {
 			image: ecs.ContainerImage.fromAsset("../stacks/docker/ws_python"),
 			portMappings: [
 				{
-					containerPort: 8080,
-					hostPort: 8080
+					containerPort: 8000,
+					protocol: ecs.Protocol.TCP,
+					hostPort: 8000
 				}
 			],
 			logging,
@@ -118,14 +113,10 @@ export class EcrEcsMultipleFargateElbStack2 extends cdk.Stack {
 		const serviceApp = new ecs.FargateService(this, "FargateServiceApp", {
 			cluster: cluster,
 			taskDefinition: taskApp,
-			deploymentController: {
-				type: ecs.DeploymentControllerType.CODE_DEPLOY
-			},
-			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
-			// internal A-recode like `node.cdk.example.com`
+			// internal A-recode like `app.cdk.ts`
 			cloudMapOptions: {
-				name: "node",
+				name: "app",
 			},
 		})
 
@@ -156,7 +147,7 @@ export class EcrEcsMultipleFargateElbStack2 extends cdk.Stack {
 			protocol: elb.ApplicationProtocol.HTTP,
 			deregistrationDelay: cdk.Duration.seconds(30),
 			targetType: elb.TargetType.IP,
-			targets: [serviceApp],
+			targets: [serviceNginx],
 			healthCheck: {
 				healthyThresholdCount: 2,
 				interval: cdk.Duration.seconds(10)
