@@ -8,6 +8,11 @@ The list below shows ecs-stacks difference that you can deploy here.
   - Using original Docker pushed to ECR.
 - EcrEcsFargateElb
   - Using original Docker pushed to ECR, and deploying ALB to make deploy/destroy faster.
+- EcrEcsMultipleFargateElbStack1
+  - Using multiple-original Docker pushed to ECR under `localhost` network.
+- EcrEcsMultipleFargateElbStack2
+  - Using multiple-original Docker pushed to ECR under `awsvpc` network.
+	
 
 # References
 
