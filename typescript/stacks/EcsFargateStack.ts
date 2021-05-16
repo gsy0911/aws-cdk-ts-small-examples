@@ -50,7 +50,8 @@ export class EcsFargateStack extends cdk.Stack {
 			cluster: cluster,
 			assignPublicIp: true,
 			taskDefinition: taskDef,
-			circuitBreaker: {rollback: true}
+			circuitBreaker: {rollback: true},
+			healthCheckGracePeriod: cdk.Duration.seconds(5)
 		});
 	}
 }
