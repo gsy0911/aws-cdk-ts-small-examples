@@ -6,8 +6,9 @@ help: ## show commands ## make
 
 .PHONY: build
 build: ## build image ## make build
-	@docker build -t python/prog .
+	@docker build -t python/streamlit .
+
 
 .PHONY: start
 start: ## start local ## make start
-	@docker run --privileged --init -it python/prog python example.py
+	@docker run -p 8001:8001 -it python/streamlit streamlit run app.py
