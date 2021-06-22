@@ -11,4 +11,4 @@ build: ## build image ## make build
 
 .PHONY: start
 start: ## start local ## make start
-	@docker run -p 8001:8001 -it python/streamlit streamlit run app.py
+	@docker run -p 80:80 -it python/streamlit streamlit run app.py
