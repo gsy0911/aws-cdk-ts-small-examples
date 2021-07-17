@@ -6,16 +6,34 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import { PythonFunction } from '@aws-cdk/aws-lambda-python';
 import * as iam from '@aws-cdk/aws-iam';
 
-import { getParams } from './params';
+// import { getParams } from './params';
+
+export interface IParameters {
+	/** SecretManager ARN*/
+	gitTokenInSecretManagerARN: string,
+	/** mapping key name */
+	gitTokenInSecretManagerJsonField: string,
+	/** git owner name */
+	gitOwner: string,
+	/** git repository name */
+	gitRepoName: string,
+	/** git branch name */
+	gitSourceBranch?: string,
+	/** 12 digits */
+	awsAccountId: string,
+	elasticBeanstalkApplicationName: string,
+	elasticBeanstalkEnvironmentSuffix: string,
+	/** ex: /aws/containers/{application-name} */
+	cloudwatchLogsLogStreamName: string
+}
 
 export class PipelineStack extends cdk.Stack {
-    constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    constructor(scope: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
         super(scope, id, props);
 
         const pipeline = new codepipeline.Pipeline(this, 'MyFirstPipeline', {
             pipelineName: "MyPipeline"
         });
-		const params = getParams()
 
         // S3 location
         const sourceOutput = new codepipeline.Artifact();
@@ -163,7 +181,7 @@ export class PipelineStack extends cdk.Stack {
 				},
 				"LOG_STREAM_NAME": {
 					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-					value: params.cloudwatchLogsLogSteramName
+					value: params.cloudwatchLogsLogStreamName
 				}
 			},
 			role: buildRole
@@ -232,5 +250,5 @@ export class PipelineStack extends cdk.Stack {
 
 
 const app = new cdk.App();
-new PipelineStack(app, "Pipeline");
+// new PipelineStack(app, "Pipeline");
 app.synth();

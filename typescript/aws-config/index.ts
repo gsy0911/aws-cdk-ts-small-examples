@@ -1,7 +1,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as awsconfig from '@aws-cdk/aws-config';
 import {IParameters} from './IParameters';
-import {params} from './params';
+// import {params} from './params';
 
 
 export class AwsConfigStack extends cdk.Stack {
@@ -20,5 +20,5 @@ export class AwsConfigStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new AwsConfigStack(app, "CloudTrailStack", params, {description: "ts-example"});
+// new AwsConfigStack(app, "CloudTrailStack", params, {description: "ts-example"});
 app.synth();
