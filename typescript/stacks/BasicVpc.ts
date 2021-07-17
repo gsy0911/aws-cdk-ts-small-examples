@@ -1,6 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as ec2 from '@aws-cdk/aws-ec2';
-import {CfnVPCGatewayAttachment} from "@aws-cdk/aws-ec2";
+import {CfnEIP, CfnNatGateway, CfnSubnet, CfnVPCGatewayAttachment} from "@aws-cdk/aws-ec2";
 
 
 export interface IBasicVpc {
@@ -61,6 +61,48 @@ class InternetGateway {
 	}
 }
 
+interface IElasticIp {
+	name: string
+	availabilityZone: string
+	environment: string
+}
+
+class ElasticIp {
+	public eip: ec2.CfnEIP;
+
+	constructor(scope: cdk.Construct, props: IElasticIp) {
+		this.eip = new ec2.CfnEIP(scope, `eip-${props.name}-${props.availabilityZone}-${props.environment}`, {
+			domain: "vpc",
+			tags: [{key: "Name", value: `${props.name}-${props.availabilityZone}-${props.environment}`}]
+		})
+
+	}
+}
+
+interface INatGateway {
+	name: string
+	availabilityZone: string
+	environment: string
+}
+
+class NatGateway {
+	public ngw: ec2.CfnNatGateway;
+
+	private readonly publicSubnet: ec2.CfnSubnet;
+	private readonly eip: ec2.CfnEIP;
+
+	constructor(scope: cdk.Construct, publicSubnet: ec2.CfnSubnet, eip: ec2.CfnEIP, props: INatGateway) {
+		this.publicSubnet = publicSubnet
+		this.eip = eip
+
+		this.ngw = new ec2.CfnNatGateway(scope, `ngw-${props.name}-${props.availabilityZone}-${props.environment}`, {
+			allocationId: this.eip.attrAllocationId,
+			subnetId: this.publicSubnet.ref,
+			tags: [{key: "Name", value: `ngw-${props.name}-${props.availabilityZone}-${props.environment}`}]
+		})
+	}
+}
+
 export class VpcStack extends cdk.Stack {
 	constructor(app: cdk.App, id: string, params: IBasicVpc, props?: cdk.StackProps) {
 		super(app, id, props);
@@ -110,6 +152,21 @@ export class VpcStack extends cdk.Stack {
 		})
 
 		const igw = new InternetGateway(this, vpc.vpc)
+
+		const eip1a = new ElasticIp(this, {
+			availabilityZone: "ap-northeast-1a", name: "eip1a", environment: params.environment
+		})
+		const eip1c = new ElasticIp(this, {
+			availabilityZone: "ap-northeast-1c", name: "eip1c", environment: params.environment
+		})
+
+		const ngw1a = new NatGateway(this, public1a.subnet, eip1a.eip, {
+			availabilityZone: "ap-northeast-1a", name: "ngw1a", environment: params.environment
+		})
+
+		const ngw1c = new NatGateway(this, public1c.subnet, eip1c.eip, {
+			availabilityZone: "ap-northeast-1c", name: "ngw1c", environment: params.environment
+		})
 
 	}
 }
