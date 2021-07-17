@@ -103,6 +103,7 @@ class NatGateway {
 	}
 }
 
+
 export class VpcStack extends cdk.Stack {
 	constructor(app: cdk.App, id: string, params: IBasicVpc, props?: cdk.StackProps) {
 		super(app, id, props);
@@ -168,5 +169,67 @@ export class VpcStack extends cdk.Stack {
 			availabilityZone: "ap-northeast-1c", name: "ngw1c", environment: params.environment
 		})
 
+		// public route table
+		const publicRouteTable = new ec2.CfnRouteTable(this, "rtb-public", {
+			vpcId: vpc.vpc.ref,
+			tags: [{key: "Name", value: "rtb-public"}]
+		})
+		new ec2.CfnRoute(this, "public-route", {
+			routeTableId: publicRouteTable.ref,
+			destinationCidrBlock: "0.0.0.0/0",
+			gatewayId: igw.igw.ref
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1a", {
+			routeTableId: publicRouteTable.ref,
+			subnetId: public1a.subnet.ref
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1c", {
+			routeTableId: publicRouteTable.ref,
+			subnetId: public1c.subnet.ref
+		})
+
+		// app1a route table
+		const rtbApp1a = new ec2.CfnRouteTable(this, "rtb-app-1a", {
+			vpcId: vpc.vpc.ref,
+			tags: [{key: "Name", value: "rtb-app-1a"}]
+		})
+		new ec2.CfnRoute(this, "app-1a-route", {
+			routeTableId: rtbApp1a.ref,
+			destinationCidrBlock: "0.0.0.0/0",
+			natGatewayId: ngw1a.ngw.ref
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "app-1a-subnet1a", {
+			routeTableId: rtbApp1a.ref,
+			subnetId: app1a.subnet.ref
+		})
+
+		// app1a route table
+		const rtbApp1c = new ec2.CfnRouteTable(this, "rtb-app-1c", {
+			vpcId: vpc.vpc.ref,
+			tags: [{key: "Name", value: "rtb-app-1c"}]
+		})
+		new ec2.CfnRoute(this, "app-1c-route", {
+			routeTableId: rtbApp1c.ref,
+			destinationCidrBlock: "0.0.0.0/0",
+			natGatewayId: ngw1c.ngw.ref
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "app-1c-subnet1a", {
+			routeTableId: rtbApp1c.ref,
+			subnetId: app1c.subnet.ref
+		})
+
+		// db route table
+		const rtbDb = new ec2.CfnRouteTable(this, "rtb-db", {
+			vpcId: vpc.vpc.ref,
+			tags: [{key: "Name", value: "rtb-db"}]
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "db-db-1a", {
+			routeTableId: rtbDb.ref,
+			subnetId: db1a.subnet.ref
+		})
+		new ec2.CfnSubnetRouteTableAssociation(this, "db-db-1c", {
+			routeTableId: rtbDb.ref,
+			subnetId: db1c.subnet.ref
+		})
 	}
 }
