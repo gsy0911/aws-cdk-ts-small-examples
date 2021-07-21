@@ -10,3 +10,5 @@ export {EcrEcsMultipleFargateElbStack1} from './EcrEcsMultipleFargateElbStack1';
 export {EcrEcsMultipleFargateElbStack2} from './EcrEcsMultipleFargateElbStack2';
 export {CognitoStack, ICognitoStack} from './CognitoStack';
 export {SamExample, ISamExample} from './SamExample';
+export {StreamlitEcsFargateStack, IStreamlitEcsFargate} from './StreamlitEcsFargateStack';
+export {RdsEc2AccessStack, RdsEc2IamAccessStack, IRdsEc2AccessStack} from './RdsEc2Access';

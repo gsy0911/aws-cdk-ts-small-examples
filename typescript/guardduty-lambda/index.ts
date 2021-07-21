@@ -7,7 +7,7 @@ import * as sns from '@aws-cdk/aws-sns';
 import * as chatbot from '@aws-cdk/aws-chatbot';
 import { PythonFunction } from '@aws-cdk/aws-lambda-python';
 import { IParameters } from './IParameters';
-import { params } from './params';
+// import { params } from './params';
 
 
 export class GuardDutyStack extends cdk.Stack {
@@ -68,5 +68,5 @@ export class GuardDutyStack extends cdk.Stack {
 }
 
 const app = new cdk.App();
-new GuardDutyStack(app, "GuardDuty", params, {description: "ts-example"});
+// new GuardDutyStack(app, "GuardDuty", params, {description: "ts-example"});
 app.synth();
