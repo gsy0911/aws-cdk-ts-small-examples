@@ -26,7 +26,9 @@ export interface IStreamlitEcsFargateCloudFront {
 		usEast1: string
 		apNortheast1: string
 	},
-	domainNames: string[]
+	domainNames: string[],
+	albDomain: string
+
 }
 
 
@@ -87,10 +89,7 @@ export class StreamlitEcsFargateCloudFrontStack extends cdk.Stack {
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
 			vpc: vpc,
-			clusterName: "fargate-elb-cluster",
-			defaultCloudMapNamespace: {
-				name: "cdk.example.com."
-			}
+			clusterName: "streamlit-cluster",
 		});
 
 		// create a task definition with CloudWatch Logs
@@ -132,15 +131,12 @@ export class StreamlitEcsFargateCloudFrontStack extends cdk.Stack {
 		})
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
-			loadBalancerName: "EcsSingleFargateALB",
+			loadBalancerName: "StreamlitALB",
 			vpc: vpc,
 			idleTimeout: cdk.Duration.seconds(30),
 			// scheme: true to access from external internet
 			internetFacing: true,
 		})
-		// const listenerHttp1 = alb.addListener("listener-http-1", {
-		// 	protocol: elb.ApplicationProtocol.HTTP
-		// })
 
 		const listenerHttp1 = alb.addListener("listener-https", {
 			protocol: elb.ApplicationProtocol.HTTPS,
@@ -156,6 +152,14 @@ export class StreamlitEcsFargateCloudFrontStack extends cdk.Stack {
 				healthyThresholdCount: 2,
 				interval: cdk.Duration.seconds(10)
 			}
+		})
+		// httpアクセスがあった場合httpsに転送する
+		alb.addListener("listenerRedirect", {
+			protocol: elb.ApplicationProtocol.HTTP,
+			defaultAction: elb.ListenerAction.redirect({
+				port: "443",
+				protocol: elb.ApplicationProtocol.HTTPS,
+			})
 		})
 
 		const listenerHttp2 = alb.addListener("listener-http-2", {
@@ -175,8 +179,8 @@ export class StreamlitEcsFargateCloudFrontStack extends cdk.Stack {
 		const certificate = acm.Certificate.fromCertificateArn(this, "virginiaCertificate", params.certificates.usEast1)
 		new cloudfront.Distribution(this, "streamlit-distribution", {
 			defaultBehavior: {
-				origin: new origins.LoadBalancerV2Origin(alb),
-				// viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY
+				origin: new origins.HttpOrigin(params.albDomain),
+				viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY
 			},
 			domainNames: params.domainNames,
 			certificate: certificate
