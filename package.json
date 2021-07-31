@@ -34,6 +34,8 @@
 		"@aws-cdk/aws-apigateway": "^1.109.0",
 		"@aws-cdk/aws-batch": "^1.109.0",
 		"@aws-cdk/aws-chatbot": "^1.109.0",
+		"@aws-cdk/aws-cloudfront": "^1.116.0",
+		"@aws-cdk/aws-cloudfront-origins": "^1.116.0",
 		"@aws-cdk/aws-cloudtrail": "^1.109.0",
 		"@aws-cdk/aws-codebuild": "^1.109.0",
 		"@aws-cdk/aws-codedeploy": "^1.109.0",
