@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {CloudTrailStack, ICloudTrailStack} from '../stacks';
+import {CloudTrailStack, ICloudTrailStack} from '../../stacks';
 
 export const defaultParams: ICloudTrailStack = {
 	bucketNameSuffix: "cdk-example",

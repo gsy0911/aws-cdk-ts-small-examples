@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {RdsEc2AccessStack, RdsEc2IamAccessStack, IRdsEc2AccessStack} from '../stacks';
+import {RdsEc2AccessStack, RdsEc2IamAccessStack, IRdsEc2AccessStack} from '../../stacks';
 
 
 export const params: IRdsEc2AccessStack = {

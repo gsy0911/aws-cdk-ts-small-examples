@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {VpcEc2Stack, IVpcEc2} from '../stacks';
+import {VpcEc2Stack, IVpcEc2} from '../../stacks';
 
 
 export const params: IVpcEc2 = {

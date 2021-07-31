@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {EventBridgeTriggeredEcsSingleFargatePipeline} from '../stacks';
+import {EventBridgeTriggeredEcsSingleFargatePipeline} from '../../stacks';
 // import {params} from './params';
 
 

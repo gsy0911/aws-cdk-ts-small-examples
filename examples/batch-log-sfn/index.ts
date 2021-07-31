@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {BatchSfnStack, IBatchLogSfn} from '../stacks';
+import {BatchSfnStack, IBatchLogSfn} from '../../stacks';
 
 
 export const params: IBatchLogSfn = {

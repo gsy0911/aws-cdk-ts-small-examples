@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {VpcStack} from '../stacks/BasicVpc';
+import {VpcStack} from '../../stacks/BasicVpc';
 
 
 const app = new cdk.App();
