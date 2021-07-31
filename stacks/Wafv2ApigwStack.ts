@@ -29,9 +29,11 @@ export class Wafv2ApigwStack extends cdk.Stack {
 
 		/** lambda role */
 		const role = new iam.Role(this, 'lambdaRole', {
-			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'cwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
+			]
 		})
-		role.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'SwapRoleToAccessEB', 'arn:aws:iam::aws:policy/CloudWatchFullAccess'))
 
 		/** note: when you use the stack, configure the entry path */
 		const lambdaSimpleResponse = new PythonFunction(this, 'lambdaSimpleResponse', {

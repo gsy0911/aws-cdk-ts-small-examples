@@ -28,19 +28,17 @@ export class VpcEc2Stack extends cdk.Stack {
 		})
 		const instanceRole = new iam.Role(this, `${id}-instance-role`, {
 			roleName: `${id}-instance-role`,
-			assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonEC2ContainerServiceforEC2Role", "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+				),
+				/** Add managed policy to use SSM */
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonEC2RoleforSSM", "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+				)
+			]
 		})
-		instanceRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AmazonEC2ContainerServiceforEC2Role-${id}`, "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-			)
-		)
-		/** Add managed policy to use SSM */
-		instanceRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AmazonEC2RoleforSSM-${id}`, "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
-			)
-		)
 		const instanceProfile = new iam.CfnInstanceProfile(this, `${id}-instance-profile`, {
 			instanceProfileName: `${id}-instance-profile`,
 			roles: [instanceRole.roleName]

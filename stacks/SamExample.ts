@@ -15,9 +15,11 @@ export class SamExample extends cdk.Stack {
 
 		/** lambda role */
 		const role = new iam.Role(this, 'lambdaRole', {
-			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'cwLogsAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
+			]
 		})
-		role.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'CloudWatchLogsAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess'))
 
 		/** note: when you use the stack, configure the entry path */
 		const lambdaSimpleResponse = new PythonFunction(this, 'LambdaFunction', {

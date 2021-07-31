@@ -58,10 +58,12 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 
 		const executionRole = new iam.Role(this, 'executionRole', {
 			roleName: "ecsExecutionRole",
-			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(this, "cwLogsAccess", "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"),
+				iam.ManagedPolicy.fromManagedPolicyArn(this, "ecrReadAccess", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly")
+			]
 		})
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "cloudwatch_logs_access", "arn:aws:iam::aws:policy/AWSOpsWorksCloudWatchLogs"))
-		executionRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecr_read_access", "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"))
 
 		const taskRole = new iam.Role(this, 'taskRole', {
 			roleName: "ecsTaskRole",
@@ -192,11 +194,13 @@ export class EventBridgeTriggeredEcsSingleFargatePipeline extends cdk.Stack {
 		 */
 		const buildRole = new iam.Role(this, 'BuildRole', {
 			roleName: `${id}-BuildRole`,
-			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'),
+				/** Policy to access SecretsManager */
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'CodeBuildSecretsManagerAccess', 'arn:aws:iam::aws:policy/SecretsManagerReadWrite')
+			]
 		})
-		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
-		/** Policy to access SecretsManager */
-		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'CodeBuildSecretsManagerAccess', 'arn:aws:iam::aws:policy/SecretsManagerReadWrite'))
 
 		// to build docker in CodeBuild, set privileged True
 		const codeBuildCache = codeBuild.Cache.local(codeBuild.LocalCacheMode.DOCKER_LAYER)

@@ -26,9 +26,11 @@ export class StreamlitEcsFargateStack extends cdk.Stack {
 		});
 
 		const taskRole = new iam.Role(this, 'taskRole', {
-			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(this, "ecsFullAccess", "arn:aws:iam::aws:policy/AmazonECS_FullAccess")
+			]
 		})
-		taskRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, "ecs_full_access", "arn:aws:iam::aws:policy/AmazonECS_FullAccess"))
 		const taskDef = new ecs.FargateTaskDefinition(this, "StreamlitTask", {
 			memoryLimitMiB: 512,
 			cpu: 256,
