@@ -46,6 +46,7 @@
 		"@aws-cdk/aws-ecr-assets": "^1.109.0",
 		"@aws-cdk/aws-ecs-patterns": "^1.109.0",
 		"@aws-cdk/aws-elasticloadbalancingv2": "^1.109.0",
+		"@aws-cdk/aws-elasticloadbalancingv2-actions": "^1.116.0",
 		"@aws-cdk/aws-events-targets": "^1.109.0",
 		"@aws-cdk/aws-guardduty": "^1.109.0",
 		"@aws-cdk/aws-iam": "^1.109.0",
