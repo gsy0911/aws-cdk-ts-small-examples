@@ -77,7 +77,7 @@ export class BatchSfnStack extends cdk.Stack {
 		})
 
 		const dockerImage = new ecrAssets.DockerImageAsset(this, "docker-image", {
-			directory: "../stacks/docker_simple"
+			directory: "../stacks/docker/simple_py"
 		})
 
 		/**
