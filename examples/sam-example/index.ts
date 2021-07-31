@@ -1,5 +1,5 @@
 import * as cdk from "@aws-cdk/core";
-import {SamExample} from '../stacks';
+import {SamExample} from '../../stacks';
 
 
 const app = new cdk.App();
