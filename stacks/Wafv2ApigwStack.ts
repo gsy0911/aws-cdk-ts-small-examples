@@ -36,7 +36,7 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		/** note: when you use the stack, configure the entry path */
 		const lambdaSimpleResponse = new PythonFunction(this, 'lambdaSimpleResponse', {
 			functionName: "simple_response",
-			entry: '../stacks/lambda_Wafv2Apigw',
+			entry: '../stacks/lambda/wafv2_apigw',
 			index: 'sample.py',
 			handler: 'handler',
 			runtime: lambda.Runtime.PYTHON_3_8,
