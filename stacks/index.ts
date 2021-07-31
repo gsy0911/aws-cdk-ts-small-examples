@@ -13,7 +13,9 @@ export {SamExample, ISamExample} from './SamExample';
 export {
 	StreamlitEcsFargateStack,
 	IStreamlitEcsFargate,
-	StreamlitEcsFargateCloudFrontStack,
-	IStreamlitEcsFargateCloudFront
+	StreamlitEcsFargateHttpCloudFrontStack,
+	IStreamlitEcsFargateHttpCloudFront,
+	StreamlitEcsFargateHttpsOnlyCloudFrontStack,
+	IStreamlitEcsFargateHttpsOnlyCloudFront
 } from './StreamlitEcsFargateStack';
 export {RdsEc2AccessStack, RdsEc2IamAccessStack, IRdsEc2AccessStack} from './RdsEc2Access';
