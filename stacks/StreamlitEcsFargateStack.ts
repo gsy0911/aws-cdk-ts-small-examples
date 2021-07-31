@@ -35,8 +35,7 @@ export interface IStreamlitEcsFargateCognito {
 	cognito: {
 		callbackUrls: string[]
 		logoutUrls: string[]
-		domainName: string
-		certificate: string
+		domainPrefix: string
 	}
 }
 
@@ -111,7 +110,7 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 		super(scope, id, props);
 
 		const userPool = new cognito.UserPool(this, "userPool", {
-			userPoolName: "php-user-pool-test",
+			userPoolName: "streamlit-user-pool-test",
 			// signUp
 			// By default, self sign up is disabled. Otherwise use userInvitation
 			selfSignUpEnabled: true,
@@ -162,13 +161,13 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 
 		// only available domain
 		const userPoolDomain = userPool.addDomain("cognito-domain", {
-			customDomain: {
-				domainName: params.cognito.domainName,
-				certificate: acm.Certificate.fromCertificateArn(this, "virginiaCertificate", params.cognito.certificate)
-			}
-			// cognitoDomain: {
-			// 	domainPrefix: params.cognito.domainPrefix
+			// customDomain: {
+			// 	domainName: params.cognito.domainName,
+			// 	certificate: acm.Certificate.fromCertificateArn(this, "virginiaCertificate", params.cognito.certificate)
 			// }
+			cognitoDomain: {
+				domainPrefix: params.cognito.domainPrefix
+			}
 		})
 
 		// App Clients
@@ -218,7 +217,14 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 					hostPort: 80
 				}
 			],
-			command: ["streamlit", "run", "app.py"]
+			command: ["streamlit", "run", "app.py"],
+			logging
+		})
+
+		const ecsServiceSecurityGroup = new ec2.SecurityGroup(this, "ecs-service-sg", {
+			vpc,
+			securityGroupName: "streamlit-service-sg",
+			description: "security group to allow IdP",
 		})
 
 		const service = new ecs.FargateService(this, "StreamlitService", {
@@ -229,7 +235,23 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 			},
 			healthCheckGracePeriod: cdk.Duration.seconds(5),
 			assignPublicIp: true,
+			securityGroups: [ecsServiceSecurityGroup]
 		})
+
+		// https://<alb-domain>/oauth2/idpresponse
+		// requires allowing HTTPS egress-rule
+		const albSecurityGroup = new ec2.SecurityGroup(this, "alb-sg", {
+			vpc,
+			securityGroupName: "streamlit-alb-sg",
+			description: "security group to allow IdP",
+			allowAllOutbound: false
+		})
+		albSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "allow HTTP")
+		albSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8080), "allow alt HTTP")
+		albSecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), "allow HTTPS")
+		albSecurityGroup.addEgressRule(ecsServiceSecurityGroup, ec2.Port.tcp(80), "allow HTTP")
+		albSecurityGroup.addEgressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443), "allow HTTPS")
+		ecsServiceSecurityGroup.addIngressRule(albSecurityGroup, ec2.Port.tcp(80), "allow from alb-HTTP")
 
 		const alb = new elb.ApplicationLoadBalancer(this, "ApplicationLoadBalancer", {
 			loadBalancerName: "StreamlitALB",
@@ -237,6 +259,7 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 			idleTimeout: cdk.Duration.seconds(30),
 			// scheme: true to access from external internet
 			internetFacing: true,
+			securityGroup: albSecurityGroup
 		})
 
 		const listenerHttp1 = alb.addListener("listener-https", {
@@ -259,9 +282,11 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 				userPool: userPool,
 				userPoolClient: app1,
 				userPoolDomain: userPoolDomain,
+				scope: "openid",
+				onUnauthenticatedRequest: elb.UnauthenticatedAction.AUTHENTICATE,
 				next: elb.ListenerAction.forward([targetGroupBlue])
 			}),
-            conditions: [elb.ListenerCondition.pathPatterns(["*"])],
+			conditions: [elb.ListenerCondition.pathPatterns(["*"])],
 			priority: 1
 		})
 		// httpアクセスがあった場合httpsに転送する
