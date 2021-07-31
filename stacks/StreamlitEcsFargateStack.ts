@@ -7,6 +7,7 @@ import * as elb from "@aws-cdk/aws-elasticloadbalancingv2";
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
 import * as acm from '@aws-cdk/aws-certificatemanager';
+import * as route53 from '@aws-cdk/aws-route53';
 
 export interface IStreamlitEcsFargate {
 	vpcId: string
@@ -25,6 +26,11 @@ export interface IStreamlitEcsFargateHttpCloudFront {
 	certificates: {
 		usEast1: string
 	},
+	// cloudfront: {
+	// 	// acm-arn of us-east-1
+	// 	certificates: string
+	// 	domainNameRoute53: ""
+	// }
 	domainNames: string[],
 }
 
@@ -164,14 +170,6 @@ export class StreamlitEcsFargateHttpCloudFrontStack extends cdk.Stack {
 				interval: cdk.Duration.seconds(10)
 			}
 		})
-		// httpアクセスがあった場合httpsに転送する
-		alb.addListener("listenerRedirect", {
-			protocol: elb.ApplicationProtocol.HTTP,
-			defaultAction: elb.ListenerAction.redirect({
-				port: "443",
-				protocol: elb.ApplicationProtocol.HTTPS,
-			})
-		})
 
 		const listenerHttp2 = alb.addListener("listener-http-2", {
 			port: 8080,
@@ -187,6 +185,7 @@ export class StreamlitEcsFargateHttpCloudFrontStack extends cdk.Stack {
 			}
 		})
 
+		// CloudFront
 		const certificate = acm.Certificate.fromCertificateArn(this, "virginiaCertificate", params.certificates.usEast1)
 		new cloudfront.Distribution(this, "streamlit-distribution", {
 			defaultBehavior: {
@@ -196,6 +195,7 @@ export class StreamlitEcsFargateHttpCloudFrontStack extends cdk.Stack {
 			domainNames: params.domainNames,
 			certificate: certificate
 		})
+
 	}
 }
 
