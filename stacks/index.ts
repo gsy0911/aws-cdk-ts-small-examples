@@ -13,8 +13,6 @@ export {SamExample, ISamExample} from './SamExample';
 export {
 	StreamlitEcsFargateStack,
 	IStreamlitEcsFargate,
-	StreamlitEcsFargateHttpCloudFrontStack,
-	IStreamlitEcsFargateHttpCloudFront,
 	StreamlitEcsFargateHttpsOnlyCloudFrontStack,
 	IStreamlitEcsFargateHttpsOnlyCloudFront
 } from './StreamlitEcsFargateStack';
