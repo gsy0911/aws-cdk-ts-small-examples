@@ -14,8 +14,8 @@ export interface IBatchLogSfn {
 
 
 export class BatchSfnStack extends cdk.Stack {
-  constructor(app: cdk.App, id: string, params: IBatchLogSfn, props?: cdk.StackProps) {
-    super(app, id, props);
+	constructor(app: cdk.App, id: string, params: IBatchLogSfn, props?: cdk.StackProps) {
+		super(app, id, props);
 
 		const vpc = new ec2.Vpc(this, `${params.environment}-vpc`, {
 			cidr: params.vpcCidr,
@@ -37,39 +37,32 @@ export class BatchSfnStack extends cdk.Stack {
 		/** role for batch execution */
 		const batchRole = new iam.Role(this, `${params.environment}-batch-role`, {
 			roleName: `${params.environment}-batch-role`,
-			assumedBy: new iam.ServicePrincipal('batch.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('batch.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AWSBatchServiceRole", "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+				),
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'lambdaRoleCwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
+			]
 		})
-		batchRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AWSBatchServiceRole-${params.environment}`, "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
-			)
-		)
-		batchRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
-			resources: ['*'],
-			actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams']
-		}))
 
 		/** */
 		const instanceRole = new iam.Role(this, `${params.environment}-instance-role`, {
 			roleName: `${params.environment}-instance-role`,
-			assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+			managedPolicies: [
+
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonEC2ContainerServiceforEC2Role", "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+				),
+
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonS3FullAccess", "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+				),
+				iam.ManagedPolicy.fromManagedPolicyArn(this, 'lambdaRoleCwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
+			]
 		})
-		instanceRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AmazonEC2ContainerServiceforEC2Role-${params.environment}`, "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-			)
-		)
-		instanceRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
-			resources: ['*'],
-			actions: ['s3:*']
-		}))
-		instanceRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
-			resources: ['*'],
-			actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams']
-		}))
+
 		/** */
 		const instanceProfile = new iam.CfnInstanceProfile(this, `${params.environment}-instance-profile`, {
 			instanceProfileName: `${params.environment}-instance-profile`,
@@ -102,23 +95,20 @@ export class BatchSfnStack extends cdk.Stack {
 		/** */
 		const jobRole = new iam.Role(this, `${params.environment}-batch-job-role`, {
 			roleName: `${params.environment}-batch-job-role`,
-			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com')
+			assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+			managedPolicies: [
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonECSTaskExecutionRolePolicy", "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+				),
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "AmazonS3FullAccess", "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+				),
+				iam.ManagedPolicy.fromManagedPolicyArn(
+					this, "CloudWatchLogsFullAccess", "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+				)
+
+			]
 		})
-		jobRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AmazonECSTaskExecutionRolePolicy_${params.environment}`, "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-			)
-		)
-		jobRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `AmazonS3FullAccess_${params.environment}`, "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-			)
-		)
-		jobRole.addManagedPolicy(
-			iam.ManagedPolicy.fromManagedPolicyArn(
-				this, `CloudWatchLogsFullAccess_${params.environment}`, "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-			)
-		)
 
 		/** */
 		const batchJobQueue = new batch.JobQueue(this, `${params.environment}-batch-job-queue`, {
@@ -166,6 +156,6 @@ export class BatchSfnStack extends cdk.Stack {
 		const sfnStockProcess = new stepfunctions.StateMachine(this, `${params.environment}-sfn-sm`, {
 			definition: sfnBatchTask
 		})
-  }
+	}
 }
 

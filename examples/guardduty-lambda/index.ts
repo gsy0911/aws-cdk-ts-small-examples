@@ -14,7 +14,7 @@ export class GuardDutyStack extends cdk.Stack {
   	constructor(app: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
 		super(app, id, props);
 
-		/** Recieve Data from GuardDuty */
+		/** Receive Data from GuardDuty */
 		const lambdaRole = new iam.Role(this, 'lambdaRole', {
 			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
 		})

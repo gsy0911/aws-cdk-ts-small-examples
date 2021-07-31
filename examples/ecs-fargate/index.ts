@@ -5,7 +5,7 @@ import {
 	EcrEcsSingleFargateElbStack,
 	EcrEcsMultipleFargateElbStack1,
 	EcrEcsMultipleFargateElbStack2
-} from '../stacks';
+} from '../../stacks';
 import {params} from './params';
 
 
