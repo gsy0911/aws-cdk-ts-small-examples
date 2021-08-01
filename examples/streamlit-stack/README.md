@@ -35,7 +35,7 @@ export const paramsCognito: IStreamlitEcsFargateCognito = {
 		route53DomainName: "streamlit.example.com"
 	},
 	cognito: {
-	    // set unique domainPrefix in a specific region.
+		// set unique domainPrefix in a specific region.
 		domainPrefix: "streamlit",
 		// suffix `oauth2/idpresponse` is fixed. do not change.
 		callbackUrls: ["https://streamlit.example.com/oauth2/idpresponse"],

@@ -154,7 +154,6 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 			accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
 			removalPolicy: cdk.RemovalPolicy.DESTROY
 			// emails, by default `no-reply@verificationemail.com` used
-			// ...
 		})
 
 		// only available domain
@@ -182,7 +181,7 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 			}
 		})
 
-		const vpc = ec2.Vpc.fromLookup(this, `existing-vpc-${id}`, {
+		const vpc = ec2.Vpc.fromLookup(this, "existing-vpc", {
 			vpcId: params.vpcId
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
@@ -326,7 +325,7 @@ export class StreamlitEcsFargateHttpsOnlyCloudFrontStack extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, params: IStreamlitEcsFargateHttpsOnlyCloudFront, props?: cdk.StackProps) {
 		super(scope, id, props);
 
-		const vpc = ec2.Vpc.fromLookup(this, `existing-vpc-${id}`, {
+		const vpc = ec2.Vpc.fromLookup(this, "existing-vpc", {
 			vpcId: params.vpcId
 		})
 		const cluster = new ecs.Cluster(this, 'FargateCluster', {
