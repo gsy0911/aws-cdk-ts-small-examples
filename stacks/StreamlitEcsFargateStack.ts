@@ -121,8 +121,6 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 				smsMessage: "Thanks for signing up! Your verification code is {####}"
 			},
 			// sign in
-			// 両方trueじゃないと、cognitoのAuth画面で失敗する。
-			// 原因は不明・・・？
 			signInAliases: {
 				username: true,
 				email: true
@@ -289,7 +287,7 @@ export class StreamlitEcsFargateCognitoStack extends cdk.Stack {
 			conditions: [elb.ListenerCondition.pathPatterns(["*"])],
 			priority: 1
 		})
-		// httpアクセスがあった場合httpsに転送する
+		// redirect to https
 		alb.addListener("listenerRedirect", {
 			protocol: elb.ApplicationProtocol.HTTP,
 			defaultAction: elb.ListenerAction.redirect({
@@ -397,7 +395,7 @@ export class StreamlitEcsFargateHttpsOnlyCloudFrontStack extends cdk.Stack {
 				interval: cdk.Duration.seconds(10)
 			}
 		})
-		// httpアクセスがあった場合httpsに転送する
+		// redirect to https
 		alb.addListener("listenerRedirect", {
 			protocol: elb.ApplicationProtocol.HTTP,
 			defaultAction: elb.ListenerAction.redirect({
