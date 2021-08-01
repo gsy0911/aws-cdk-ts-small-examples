@@ -8,7 +8,6 @@
 	- Route 53 (your original domain)
 - application
 	- streamlit
-	
 
 # preparation in common
 
@@ -31,14 +30,16 @@ export const paramsCognito: IStreamlitEcsFargateCognito = {
 		region: "ap-northeast-1"
 	},
 	alb: {
-	    // 
+		// set ACM arn for `*.example.com`
 		certificate: "arn:aws:acm:ap-northeast-1:012345678912:certificate/abcdefgh-1234-5678-9012-abcdefghijkl",
 		route53DomainName: "streamlit.example.com"
 	},
 	cognito: {
+	    // set unique domainPrefix in a specific region.
 		domainPrefix: "streamlit",
-        callbackUrls: ["https://streamlit.example.com/oauth2/idpresponse"],
-        logoutUrls: ["https://streamlit.example.com"]
+		// suffix `oauth2/idpresponse` is fixed. do not change.
+		callbackUrls: ["https://streamlit.example.com/oauth2/idpresponse"],
+		logoutUrls: ["https://streamlit.example.com"]
 	},
 }
 ```
