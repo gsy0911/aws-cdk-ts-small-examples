@@ -4,6 +4,7 @@ export {
 	EcrEcsMultipleFargateElbStack1,
 	EcrEcsMultipleFargateElbStack2
 } from './EcrEcsFargateStack';
+export {BatchSfnStack, IBatchSfnStack} from './BatchLogSfnStack';
 
 // env
 export interface IEnv {

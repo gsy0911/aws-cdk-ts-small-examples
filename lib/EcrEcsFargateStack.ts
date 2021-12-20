@@ -9,7 +9,6 @@ import {
 	aws_elasticloadbalancingv2 as aws_elbv2
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import {IEcrEcsFargateElb} from "../stacks/EcrEcsMultipleFargateElbStack2";
 
 
 export interface IEcrEcsFargateStack {
