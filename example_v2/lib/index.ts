@@ -1,0 +1,1 @@
+export {SqsLambda} from './SqsLambda';
