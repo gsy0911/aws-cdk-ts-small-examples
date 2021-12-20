@@ -1,5 +1,8 @@
 export {SqsLambda} from './SqsLambda';
-export {EcrEcsFargateStack, IEcrEcsFargateStack} from './EcrEcsFargateStack';
+export {
+	EcrEcsFargateStack, IEcrEcsFargateStack,
+	EcrEcsMultipleFargateElbStack1,
+} from './EcrEcsFargateStack';
 
 // env
 export interface IEnv {
