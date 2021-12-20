@@ -1,8 +1,11 @@
 export {SqsLambda} from './SqsLambda';
 export {
+	EcsFargateStack,
 	EcrEcsFargateStack, IEcrEcsFargateStack,
 	EcrEcsMultipleFargateElbStack1,
-	EcrEcsMultipleFargateElbStack2
+	EcrEcsMultipleFargateElbStack2,
+	EcrEcsSingleFargateElbStack,
+	EcrEcsMultipleServicesFargateElbStack
 } from './EcrEcsFargateStack';
 export {BatchSfnStack, IBatchSfnStack} from './BatchLogSfnStack';
 
