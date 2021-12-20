@@ -149,3 +149,7 @@ dist
 *cdk.context.json
 *.aws-sam
 bin
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
