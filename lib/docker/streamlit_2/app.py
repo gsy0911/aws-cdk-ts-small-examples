@@ -7,7 +7,7 @@ data = px.data.iris()
 
 # side menu
 st.sidebar.markdown(
-    "streamlit-1: sample"
+    "streamlit-2: docker_lambda"
 )
 template = st.sidebar.selectbox(
     "Template", list(pio.templates.keys())
