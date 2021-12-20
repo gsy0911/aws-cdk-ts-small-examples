@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"description": "contains a set of TypeScript example projects for the AWS Cloud Development Kit.",
 	"bin": {
-		"example_v2": "bin/example_v2.js"
+		"example": "bin/index.js"
 	},
 	"scripts": {
 		"build": "tsc",
