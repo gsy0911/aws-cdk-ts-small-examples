@@ -8,6 +8,7 @@ export {
 	EcrEcsMultipleServicesFargateElbStack
 } from './EcrEcsFargateStack';
 export {BatchSfnStack, IBatchSfnStack} from './BatchLogSfnStack';
+export {VpcRdsStack, RdsEc2AccessStack, RdsEc2IamAccessStack} from './VpcRdsStack';
 
 // env
 export interface IEnv {
