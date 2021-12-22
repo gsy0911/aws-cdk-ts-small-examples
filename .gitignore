@@ -148,7 +148,7 @@ dist
 *params.ts
 *cdk.context.json
 *.aws-sam
-bin
+
 
 # CDK asset staging directory
 .cdk.staging
