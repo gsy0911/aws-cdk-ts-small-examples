@@ -12,6 +12,10 @@ export interface ISamExample {
 	S3Path: string
 }
 
+export const samExampleParams: ISamExample = {
+	S3Path: "s3://sam-example"
+}
+
 
 export class SamExampleStack extends Stack {
 	constructor(scope: Construct, id: string, params: ISamExample, props?: StackProps) {
@@ -28,7 +32,7 @@ export class SamExampleStack extends Stack {
 		/** note: when you use the stack, configure the entry path */
 		const lambdaSimpleResponse = new PythonFunction(this, 'LambdaFunction', {
 			functionName: "simple_response",
-			entry: '../stacks/lambda/sam_example',
+			entry: './lib/lambda/sam_example',
 			index: 'lambda_function.py',
 			handler: 'handler',
 			runtime: aws_lambda.Runtime.PYTHON_3_8,

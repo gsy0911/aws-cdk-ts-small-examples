@@ -27,6 +27,14 @@ export interface IWafv2ApigwStack {
     csrfExpectedSize: number
 }
 
+export const defaultWafv2ApigwParams: IWafv2ApigwStack = {
+	maxExpectedURISize: 512,
+	maxExpectedQueryStringSize: 4096,
+	maxExpectedBodySize: 4096,
+	maxExpectedCookieSize: 4096,
+	csrfExpectedHeader: 'x-csrf-token',
+	csrfExpectedSize: 36,
+}
 
 export class Wafv2ApigwStack extends Stack {
 	constructor(scope: Construct, id: string, params: IWafv2ApigwStack, props?: StackProps) {
@@ -43,8 +51,8 @@ export class Wafv2ApigwStack extends Stack {
 		/** note: when you use the stack, configure the entry path */
 		const lambdaSimpleResponse = new PythonFunction(this, 'lambdaSimpleResponse', {
 			functionName: "simple_response",
-			entry: '../stacks/lambda/wafv2_apigw',
-			index: 'docker_lambda.py',
+			entry: './lib/lambda/wafv2_apigw',
+			index: 'sample.py',
 			handler: 'handler',
 			runtime: aws_lambda.Runtime.PYTHON_3_8,
 			role: role

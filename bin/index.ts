@@ -6,18 +6,29 @@ import {env} from '../lib/params';
 
 const app = new cdk.App();
 
+const props: cdk.StackProps = {
+	description: "cdk-example", env
+}
+
 // ECS
-new examples.EcrEcsFargateStack(app, "EcrEcsFargateStack", {vpcId: "aaaa"}, {description: "cdk-example", env})
-new examples.EcrEcsMultipleFargateElbStack1(app, "EcrEcsMultipleFargateElbStack1", {description: "cdk-example", env})
-new examples.EcrEcsMultipleFargateElbStack2(app, "EcrEcsMultipleFargateElbStack2", {description: "cdk-example", env})
-new examples.EcrEcsSingleFargateElbStack(app, "EcrEcsSingleFargateElbStack", {description: "cdk-example", env})
-new examples.EcrEcsMultipleServicesFargateElbStack(app, "EcrEcsMultipleServicesFargateElbStack", {description: "cdk-example", env})
+new examples.EcrEcsFargateStack(app, "EcrEcsFargateStack", {vpcId: "aaaa"}, props)
+new examples.EcrEcsMultipleFargateElbStack1(app, "EcrEcsMultipleFargateElbStack1", props)
+new examples.EcrEcsMultipleFargateElbStack2(app, "EcrEcsMultipleFargateElbStack2", props)
+new examples.EcrEcsSingleFargateElbStack(app, "EcrEcsSingleFargateElbStack", props)
+new examples.EcrEcsMultipleServicesFargateElbStack(app, "EcrEcsMultipleServicesFargateElbStack", props)
 
 // Batch
-new examples.BatchSfnStack(app, "BatchSfnStack", {environment: "example"}, {description: "cdk-example", env})
+new examples.BatchSfnStack(app, "BatchSfnStack", {environment: "example"}, props)
 
 // RDS
-new examples.VpcRdsStack(app, "VpcRdsStack", {description: "cdk-example", env})
-new examples.RdsEc2IamAccessStack(app, "RdsEc2IamAccessStack", {description: "cdk-example", env})
-new examples.RdsEc2AccessStack(app, "RdsEc2AccessStack", {description: "cdk-example", env})
+new examples.VpcRdsStack(app, "VpcRdsStack", props)
+new examples.RdsEc2IamAccessStack(app, "RdsEc2IamAccessStack", props)
+new examples.RdsEc2AccessStack(app, "RdsEc2AccessStack", props)
+
+// WAFv2
+new examples.Wafv2ApigwStack(app, "Wafv2ApigwStack", examples.defaultWafv2ApigwParams, props)
+
+// SAM + CDK
+new examples.SamExampleStack(app, "SamExampleStack", examples.samExampleParams, props)
+
 app.synth();

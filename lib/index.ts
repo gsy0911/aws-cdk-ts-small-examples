@@ -18,6 +18,12 @@ export {
 // Cognito
 export {CognitoStack, ICognitoStack} from './CognitoStack';
 
+// SAM + CDK
+export {SamExampleStack, ISamExample, samExampleParams} from './SamExampleStack';
+
+// Waf v2
+export {Wafv2ApigwStack, IWafv2ApigwStack, defaultWafv2ApigwParams} from './Wafv2ApigwStack';
+
 // env
 export interface IEnv {
     /** 12 digits */
