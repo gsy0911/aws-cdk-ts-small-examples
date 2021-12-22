@@ -1,5 +1,10 @@
-import * as cdk from '@aws-cdk/core';
-import * as cognito from '@aws-cdk/aws-cognito';
+import {
+	Duration,
+	Stack,
+	StackProps,
+	aws_cognito,
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 export interface ICognitoStack {
 	googleClientId?: string,
@@ -7,11 +12,11 @@ export interface ICognitoStack {
 }
 
 
-export class CognitoStack extends cdk.Stack {
-	constructor(scope: cdk.App, id: string, params: ICognitoStack, props?: cdk.StackProps) {
+export class CognitoStack extends Stack {
+	constructor(scope: Construct, id: string, params: ICognitoStack, props?: StackProps) {
 		super(scope, id, props);
 
-		const userPool = new cognito.UserPool(this, "userPool", {
+		const userPool = new aws_cognito.UserPool(this, "userPool", {
 			userPoolName: `${id}-user-pool`,
 			// signUp
 			// By default, self sign up is disabled. Otherwise use userInvitation
@@ -19,7 +24,7 @@ export class CognitoStack extends cdk.Stack {
 			userVerification: {
 				emailSubject: "Verify email message",
 				emailBody: "Thanks for signing up! Your verification code is {####}",
-				emailStyle: cognito.VerificationEmailStyle.CODE,
+				emailStyle: aws_cognito.VerificationEmailStyle.CODE,
 				smsMessage: "Thanks for signing up! Your verification code is {####}"
 			},
 			// sign in
@@ -37,7 +42,7 @@ export class CognitoStack extends cdk.Stack {
 			},
 			// role, specify if you want
 			// ...
-			mfa: cognito.Mfa.REQUIRED,
+			mfa: aws_cognito.Mfa.REQUIRED,
 			mfaSecondFactor: {
 				sms: true,
 				otp: true
@@ -48,21 +53,21 @@ export class CognitoStack extends cdk.Stack {
 				requireUppercase: true,
 				requireDigits: true,
 				requireSymbols: true,
-				tempPasswordValidity: cdk.Duration.days(3)
+				tempPasswordValidity: Duration.days(3)
 			},
-			accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+			accountRecovery: aws_cognito.AccountRecovery.EMAIL_ONLY,
 			// emails, by default `no-reply@verificationemail.com` used
 			// ...
 		})
 
 		// add third-party login such as `Google`
-		new cognito.UserPoolIdentityProviderGoogle(this, "Google", {
+		new aws_cognito.UserPoolIdentityProviderGoogle(this, "Google", {
 			clientId: params.googleClientId || "",
 			clientSecret: params.googleClientSecret || "",
 			userPool: userPool,
 			attributeMapping: {
-				email: cognito.ProviderAttribute.GOOGLE_EMAIL,
-				nickname: cognito.ProviderAttribute.GOOGLE_FAMILY_NAME
+				email: aws_cognito.ProviderAttribute.GOOGLE_EMAIL,
+				nickname: aws_cognito.ProviderAttribute.GOOGLE_FAMILY_NAME
 			}
 		})
 

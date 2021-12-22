@@ -1,11 +1,16 @@
-import * as cdk from "@aws-cdk/core";
-import * as wafv2 from "@aws-cdk/aws-wafv2";
-import * as firehose from "@aws-cdk/aws-kinesisfirehose";
-import * as s3 from '@aws-cdk/aws-s3';
-import * as iam from '@aws-cdk/aws-iam';
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as apigw from "@aws-cdk/aws-apigateway";
-import { PythonFunction } from '@aws-cdk/aws-lambda-python';
+import {
+	Stack,
+	StackProps,
+	aws_s3,
+	aws_iam,
+	aws_lambda,
+	aws_apigateway,
+	aws_kinesisfirehose,
+	aws_wafv2,
+	RemovalPolicy
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 
 export interface IWafv2ApigwStack {
 	/** Maximum number of bytes allowed in the URI component of the HTTP request. Generally the maximum possible value is determined by the server operating system (maps to file system paths), the web server software, or other middleware components. Choose a value that accomodates the largest URI segment you use in practice in your web application. */
@@ -23,15 +28,15 @@ export interface IWafv2ApigwStack {
 }
 
 
-export class Wafv2ApigwStack extends cdk.Stack {
-	constructor(scope: cdk.Construct, id: string, params: IWafv2ApigwStack, props?: cdk.StackProps) {
+export class Wafv2ApigwStack extends Stack {
+	constructor(scope: Construct, id: string, params: IWafv2ApigwStack, props?: StackProps) {
 		super(scope, id, props);
 
 		/** lambda role */
-		const role = new iam.Role(this, 'lambdaRole', {
-			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+		const role = new aws_iam.Role(this, 'lambdaRole', {
+			assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
 			managedPolicies: [
-				iam.ManagedPolicy.fromManagedPolicyArn(this, 'cwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
+				aws_iam.ManagedPolicy.fromManagedPolicyArn(this, 'cwFullAccess', 'arn:aws:iam::aws:policy/CloudWatchFullAccess')
 			]
 		})
 
@@ -39,13 +44,13 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		const lambdaSimpleResponse = new PythonFunction(this, 'lambdaSimpleResponse', {
 			functionName: "simple_response",
 			entry: '../stacks/lambda/wafv2_apigw',
-			index: 'sample.py',
+			index: 'docker_lambda.py',
 			handler: 'handler',
-			runtime: lambda.Runtime.PYTHON_3_8,
+			runtime: aws_lambda.Runtime.PYTHON_3_8,
 			role: role
 		})
 
-		const api = new apigw.LambdaRestApi(this, 'sample_api', {
+		const api = new aws_apigateway.LambdaRestApi(this, 'sample_api', {
 			handler: lambdaSimpleResponse,
 			proxy: false
 		});
@@ -54,18 +59,18 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		items.addMethod('GET');
 
 		/** bucket to store log from Firehose */
-		const logS3 = new s3.Bucket(this, "log-bucket-aws-cdk-example", {
+		const logS3 = new aws_s3.Bucket(this, "log-bucket-aws-cdk-example", {
 			bucketName: "log-bucket-aws-cdk-example",
 			autoDeleteObjects: true,
-			removalPolicy: cdk.RemovalPolicy.DESTROY
+			removalPolicy: RemovalPolicy.DESTROY
 		})
-		const firehoseAccessS3Role = new iam.Role(this, `firehose-access-s3-role`, {
+		const firehoseAccessS3Role = new aws_iam.Role(this, `firehose-access-s3-role`, {
 			roleName: `firehose-access-s3-role`,
-			assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com')
+			assumedBy: new aws_iam.ServicePrincipal('firehose.amazonaws.com')
 		})
 
-		firehoseAccessS3Role.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		firehoseAccessS3Role.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: [`arn:aws:s3:::${logS3.bucketName}`, `arn:aws:s3:::${logS3.bucketName}/*`],
 			actions: [
 				's3:*',
@@ -77,8 +82,8 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		 *
 		 * stream name must start with `aws-waf-logs-`
 		 */
-		const wafLogFirehose = new firehose.CfnDeliveryStream(this, "SampleFirehose", {
-			deliveryStreamName: "aws-waf-logs-sample",
+		new aws_kinesisfirehose.CfnDeliveryStream(this, "SampleFirehose", {
+			deliveryStreamName: "aws-waf-logs-docker_lambda",
 			s3DestinationConfiguration: {
 				bucketArn: logS3.bucketArn,
 				roleArn: firehoseAccessS3Role.roleArn,
@@ -94,7 +99,7 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		 * @see https://docs.amazonaws.cn/en_us/AWSCloudFormation/latest/UserGuide/aws-resource-wafv2-rulegroup.html
 		 */
 		// Custom Rule
-		const customRule = new wafv2.CfnRuleGroup(this, 'customRule', {
+		const customRule = new aws_wafv2.CfnRuleGroup(this, 'customRule', {
 			capacity: 100,
 			scope: "REGIONAL",
 			visibilityConfig: {
@@ -131,9 +136,9 @@ export class Wafv2ApigwStack extends cdk.Stack {
 		})
 
 		// WebACL
-		const webAcl = new wafv2.CfnWebACL(this, "SampleWafAcl", {
+		const webAcl = new aws_wafv2.CfnWebACL(this, "SampleWafAcl", {
 			defaultAction: { allow: {} },
-			name: "sample-waf-web-acl",
+			name: "docker_lambda-waf-web-acl",
 			rules: [
 				/** Custom Rules below */
 				{
@@ -241,12 +246,12 @@ export class Wafv2ApigwStack extends cdk.Stack {
 			scope: "REGIONAL",
 			visibilityConfig: {
 				cloudWatchMetricsEnabled: true,
-				metricName: "sample-waf-web-acl",
+				metricName: "docker_lambda-waf-web-acl",
 				sampledRequestsEnabled: true
 			},
 		});
 
-		const associate = new wafv2.CfnWebACLAssociation(this, "apigw-webAcl-associate", {
+		new aws_wafv2.CfnWebACLAssociation(this, "apigw-webAcl-associate", {
 			resourceArn: api.arnForExecuteApi(),
 			webAclArn: webAcl.attrArn
 		})

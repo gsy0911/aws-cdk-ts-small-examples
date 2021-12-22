@@ -15,6 +15,9 @@ export {
 	StreamlitEcsFargateHttpsOnlyCloudFrontStack, IStreamlitEcsFargateHttpsOnlyCloudFront
 } from './StreamlitEcsFargateStack';
 
+// Cognito
+export {CognitoStack, ICognitoStack} from './CognitoStack';
+
 // env
 export interface IEnv {
     /** 12 digits */
