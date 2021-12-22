@@ -9,6 +9,11 @@ export {
 } from './EcrEcsFargateStack';
 export {BatchSfnStack, IBatchSfnStack} from './BatchLogSfnStack';
 export {VpcRdsStack, RdsEc2AccessStack, RdsEc2IamAccessStack} from './VpcRdsStack';
+export {
+	StreamlitEcsFargateStack, IStreamlitEcsFargate,
+	StreamlitEcsFargateCognitoStack, IStreamlitEcsFargateCognito,
+	StreamlitEcsFargateHttpsOnlyCloudFrontStack, IStreamlitEcsFargateHttpsOnlyCloudFront
+} from './StreamlitEcsFargateStack';
 
 // env
 export interface IEnv {
