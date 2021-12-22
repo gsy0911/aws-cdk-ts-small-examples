@@ -14,6 +14,11 @@ export interface ICloudTrailStack {
 	cloudTrailLogGroupName: string
 }
 
+export const defaultCloudTrailParams: ICloudTrailStack = {
+	bucketNameSuffix: "cdk-example",
+	cloudTrailLogGroupName: "/aws/cloudtrail/cdk-example"
+}
+
 
 export class CloudTrailStack extends Stack {
   	constructor(app: Construct, id: string, params: ICloudTrailStack, props?: StackProps) {

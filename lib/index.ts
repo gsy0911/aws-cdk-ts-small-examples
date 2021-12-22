@@ -24,6 +24,9 @@ export {SamExampleStack, ISamExample, samExampleParams} from './SamExampleStack'
 // Waf v2
 export {Wafv2ApigwStack, IWafv2ApigwStack, defaultWafv2ApigwParams} from './Wafv2ApigwStack';
 
+// EC2
+export {VpcEc2Stack} from './VpcEc2Stack';
+
 // env
 export interface IEnv {
     /** 12 digits */
