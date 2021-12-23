@@ -1,14 +1,19 @@
-import * as cdk from "@aws-cdk/core";
-import * as codepipeline from '@aws-cdk/aws-codepipeline';
-import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
-import * as codebuild from '@aws-cdk/aws-codebuild';
-import * as lambda from '@aws-cdk/aws-lambda';
-import { PythonFunction } from '@aws-cdk/aws-lambda-python';
-import * as iam from '@aws-cdk/aws-iam';
+import {
+	Stack,
+	StackProps,
+	SecretValue,
+	Tags,
+	aws_lambda,
+	aws_codepipeline,
+	aws_codepipeline_actions,
+	aws_codebuild,
+	aws_iam,
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 
-// import { getParams } from './params';
 
-export interface IParameters {
+export interface IEbPipeline {
 	/** SecretManager ARN*/
 	gitTokenInSecretManagerARN: string,
 	/** mapping key name */
@@ -27,18 +32,18 @@ export interface IParameters {
 	cloudwatchLogsLogStreamName: string
 }
 
-export class PipelineStack extends cdk.Stack {
-    constructor(scope: cdk.App, id: string, params: IParameters, props?: cdk.StackProps) {
+export class EbPipelineStack extends Stack {
+    constructor(scope: Construct, id: string, params: IEbPipeline, props?: StackProps) {
         super(scope, id, props);
 
-        const pipeline = new codepipeline.Pipeline(this, 'MyFirstPipeline', {
+        const pipeline = new aws_codepipeline.Pipeline(this, 'MyFirstPipeline', {
             pipelineName: "MyPipeline"
         });
 
         // S3 location
-        const sourceOutput = new codepipeline.Artifact();
-        const oauth = cdk.SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
-        const sourceAction = new codepipeline_actions.GitHubSourceAction({
+        const sourceOutput = new aws_codepipeline.Artifact();
+        const oauth = SecretValue.secretsManager(params.gitTokenInSecretManagerARN, {jsonField: params.gitTokenInSecretManagerJsonField});
+        const sourceAction = new aws_codepipeline_actions.GitHubSourceAction({
             actionName: 'GitHub_Source',
             owner: params.gitOwner,
             repo: params.gitRepoName,
@@ -61,10 +66,10 @@ export class PipelineStack extends cdk.Stack {
 			entry: './lambda/app',
 			index: 'get_current_date.py',
 			handler: 'handler',
-			runtime: lambda.Runtime.PYTHON_3_8,
+			runtime: aws_lambda.Runtime.PYTHON_3_8,
 		})
-		cdk.Tags.of(lambdaCurrentDate).add("runtime", "python")
-		const getCurrentDateAction = new codepipeline_actions.LambdaInvokeAction({
+		Tags.of(lambdaCurrentDate).add("runtime", "python")
+		const getCurrentDateAction = new aws_codepipeline_actions.LambdaInvokeAction({
 			actionName: 'getCurrentDate',
 			lambda: lambdaCurrentDate,
 			variablesNamespace: 'BuildVariables'
@@ -77,13 +82,13 @@ export class PipelineStack extends cdk.Stack {
 		/**
 		 * deploy action
 		 */
-		const buildRole = new iam.Role(this, 'BuildRole', {
-			assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com')
+		const buildRole = new aws_iam.Role(this, 'BuildRole', {
+			assumedBy: new aws_iam.ServicePrincipal('codebuild.amazonaws.com')
 		})
-		buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
+		buildRole.addManagedPolicy(aws_iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessECR', 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess'))
 		// buildRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'BuildRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: [
 				`arn:aws:elasticbeanstalk:*:${params.awsAccountId}:application/${params.elasticBeanstalkApplicationName}`,
 				`arn:aws:elasticbeanstalk:*:${params.awsAccountId}:environment/${params.elasticBeanstalkApplicationName}/${params.elasticBeanstalkEnvironmentSuffix}*`,
@@ -92,37 +97,37 @@ export class PipelineStack extends cdk.Stack {
 			actions: ['elasticbeanstalk:*'],
 		}))
 		// 以下のPolicyは`arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess`を参考に設定している
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['arn:aws:iam::*:role/aws-elasticbeanstalk*', 'arn:aws:iam::*:instance-profile/aws-elasticbeanstalk*'],
 			actions: ['iam:AddRoleToInstanceProfile', 'iam:CreateInstanceProfile', 'iam:CreateRole'],
 		}))
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['arn:aws:iam::*:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling*'],
 			actions: ['iam:CreateServiceLinkedRole'],
 			conditions: {
 				StringLike: {'iam:AWSServiceName': 'autoscaling.amazonaws.com'}
 			}
 		}))
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['arn:aws:iam::*:role/aws-service-role/elasticbeanstalk.amazonaws.com/AWSServiceRoleForElasticBeanstalk*'],
 			actions: ['iam:CreateServiceLinkedRole'],
 			conditions: {
 				StringLike: {'iam:AWSServiceName': 'elasticbeanstalk.amazonaws.com'}
 			}
 		}))
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing*'],
 			actions: ['iam:CreateServiceLinkedRole'],
 			conditions: {
 				StringLike: {'iam:AWSServiceName': 'elasticloadbalancing.amazonaws.com'}
 			}
 		}))
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['arn:aws:iam::*:role/aws-elasticbeanstalk*'],
 			actions: ['iam:AttachRolePolicy'],
 			conditions: {
@@ -130,8 +135,8 @@ export class PipelineStack extends cdk.Stack {
 			}
 		}))
 		// ElasticBeanstalkの環境を作成する際に必要な権限
-		buildRole.addToPolicy(new iam.PolicyStatement({
-			effect: iam.Effect.ALLOW,
+		buildRole.addToPolicy(new aws_iam.PolicyStatement({
+			effect: aws_iam.Effect.ALLOW,
 			resources: ['*'],
 			actions: [
 				'elasticbeanstalk:ListPlatformBranches',
@@ -158,44 +163,44 @@ export class PipelineStack extends cdk.Stack {
 		}))
 
 		// to build docker in CodeBuild, set priviledged True
-		const codeBuildCache = codebuild.Cache.local(codebuild.LocalCacheMode.DOCKER_LAYER)
-        const project = new codebuild.PipelineProject(this, 'MyProject', {
+		const codeBuildCache = aws_codebuild.Cache.local(aws_codebuild.LocalCacheMode.DOCKER_LAYER)
+        const project = new aws_codebuild.PipelineProject(this, 'MyProject', {
 			environment: {
-				buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2,
+				buildImage: aws_codebuild.LinuxBuildImage.AMAZON_LINUX_2,
 				privileged: true
 			},
 			cache: codeBuildCache,
 			environmentVariables: {
 				"AWS_ACCOUNT": {
-					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					type: aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.awsAccountId,
 				},
 				"EB_APPLICATION_NAME": {
-					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					type: aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.elasticBeanstalkApplicationName,
 				},
 				// overwrite values in BuildAction
 				"IMAGE_TAG": {
-					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					type: aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: getCurrentDateAction.variable('current_date')
 				},
 				"LOG_STREAM_NAME": {
-					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					type: aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: params.cloudwatchLogsLogStreamName
 				}
 			},
 			role: buildRole
 		});
 
-		const buildAction = new codepipeline_actions.CodeBuildAction({
+		const buildAction = new aws_codepipeline_actions.CodeBuildAction({
             actionName: 'CodeBuild',
             project,
             input: sourceOutput, // The build action must use the CodeCommitSourceAction output as input.
-            outputs: [new codepipeline.Artifact()], // optional
+            outputs: [new aws_codepipeline.Artifact()], // optional
 			runOrder: 2,
 			environmentVariables: {
 				"IMAGE_TAG": {
-					type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+					type: aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
 					value: getCurrentDateAction.variable('current_date')
 				}
 			}
@@ -208,7 +213,7 @@ export class PipelineStack extends cdk.Stack {
 		/**
 		 * approval action
 		 */
-		const approvalAction = new codepipeline_actions.ManualApprovalAction({
+		const approvalAction = new aws_codepipeline_actions.ManualApprovalAction({
 			actionName: 'DeployApprovalAction',
 			runOrder: 1,
 			externalEntityLink: sourceAction.variables.commitUrl,
@@ -217,24 +222,24 @@ export class PipelineStack extends cdk.Stack {
 		/**
 		 * lambda to Swap EB environments.
 		 */
-		const swapRole = new iam.Role(this, 'SwapRole', {
-			assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
+		const swapRole = new aws_iam.Role(this, 'SwapRole', {
+			assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com')
 		})
-		swapRole.addManagedPolicy(iam.ManagedPolicy.fromManagedPolicyArn(this, 'SwapRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
+		swapRole.addManagedPolicy(aws_iam.ManagedPolicy.fromManagedPolicyArn(this, 'SwapRoleToAccessEB', 'arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess'))
 
 		const lambdaSwapEB = new PythonFunction(this, 'lambdaSwapEB', {
 			functionName: "PipelineSwapEB",
 			entry: './lambda/app',
 			index: 'swap_env.py',
 			handler: 'handler',
-			runtime: lambda.Runtime.PYTHON_3_8,
+			runtime: aws_lambda.Runtime.PYTHON_3_8,
 			role: swapRole,
 			environment: {
 				EB_APPLICATION_NAME: params.elasticBeanstalkApplicationName
 			}
 		})
-		cdk.Tags.of(lambdaSwapEB).add("runtime", "python")
-		const swapEB = new codepipeline_actions.LambdaInvokeAction({
+		Tags.of(lambdaSwapEB).add("runtime", "python")
+		const swapEB = new aws_codepipeline_actions.LambdaInvokeAction({
 			actionName: 'swapEB',
 			lambda: lambdaSwapEB,
 			variablesNamespace: 'SwapVariables',
@@ -247,8 +252,3 @@ export class PipelineStack extends cdk.Stack {
 
     }
 }
-
-
-const app = new cdk.App();
-// new PipelineStack(app, "Pipeline");
-app.synth();

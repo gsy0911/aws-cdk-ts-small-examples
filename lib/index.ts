@@ -1,4 +1,6 @@
 export {SqsLambda} from './SqsLambda';
+
+// ECS
 export {
 	EcsFargateStack,
 	EcrEcsFargateStack, IEcrEcsFargateStack,
@@ -7,6 +9,17 @@ export {
 	EcrEcsSingleFargateElbStack,
 	EcrEcsMultipleServicesFargateElbStack
 } from './EcrEcsFargateStack';
+
+// ECS + Pipeline
+export {
+	EventBridgeTriggeredEcsSingleFargatePipelineStack, IEventBridgeTriggeredEcsFargatePipeline
+} from './EcsPipelineStack';
+
+// ElasticBeanstalk + Pipeline
+export {
+	EbPipelineStack, IEbPipeline
+} from './EbPipelineStack';
+
 export {BatchSfnStack, IBatchSfnStack} from './BatchLogSfnStack';
 export {VpcRdsStack, RdsEc2AccessStack, RdsEc2IamAccessStack} from './VpcRdsStack';
 export {
