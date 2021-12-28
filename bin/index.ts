@@ -31,4 +31,7 @@ new examples.Wafv2ApigwStack(app, "Wafv2ApigwStack", examples.defaultWafv2ApigwP
 // SAM + CDK
 new examples.SamExampleStack(app, "SamExampleStack", examples.samExampleParams, props)
 
+// S3 Object Lambda
+new examples.S3ObjectLambdaStack(app, "S3ObjectLambdaStack", examples.defaultS3ObjectLambdaParams, props)
+
 app.synth();
