@@ -7,6 +7,19 @@ You need to do some actions, after `$ cdk deploy`
 	- and because it is impossible to set `target type` as IP, in the code CDK.
 - when CodeDeploy initial run, it is required to register IP address of the newly generated `ecs task`. 
 
+sample event
+
+```json
+[
+  {
+    "Source": "example",
+    "Detail": "{ \"action-type\": \"PUSH\", \"result\": \"SUCCESS\", \"repository-name\": \"web\", \"image-tag\": \"prod\" }",
+    "DetailType": "ECR Image Action"
+  }
+]
+```
+
+
 # References
 
 - [AWS Black Belt Online Seminar - AWS CodeDeploy](https://d1.awsstatic.com/webinars/jp/pdf/services/20210126_BlackBelt_CodeDeploy.pdf)
