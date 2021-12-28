@@ -37,8 +37,14 @@ export {SamExampleStack, ISamExample, samExampleParams} from './SamExampleStack'
 // Waf v2
 export {Wafv2ApigwStack, IWafv2ApigwStack, defaultWafv2ApigwParams} from './Wafv2ApigwStack';
 
+// VPC
+export {VpcStack} from './BasicVpc';
+
 // EC2
 export {VpcEc2Stack} from './VpcEc2Stack';
+
+// GaurdDuty
+export {GuardDutyLambdaStack, IGuardDutyLambda, defaultGuardDutyLambdaParams} from './GuarddutyLambda';
 
 // env
 export interface IEnv {
