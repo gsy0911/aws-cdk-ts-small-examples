@@ -1,6 +1,9 @@
-import * as cdk from "@aws-cdk/core";
-import * as ec2 from '@aws-cdk/aws-ec2';
-import {CfnEIP, CfnNatGateway, CfnSubnet, CfnVPCGatewayAttachment} from "@aws-cdk/aws-ec2";
+import {
+	Stack,
+	StackProps,
+	aws_ec2,
+} from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 
 export interface IBasicVpc {
@@ -10,10 +13,10 @@ export interface IBasicVpc {
 
 
 class Vpc {
-	public vpc: ec2.CfnVPC;
+	public vpc: aws_ec2.CfnVPC;
 
-	constructor(scope: cdk.Construct, environment: string) {
-		this.vpc = new ec2.CfnVPC(scope, "vpc", {
+	constructor(scope: Construct, environment: string) {
+		this.vpc = new aws_ec2.CfnVPC(scope, "vpc", {
 			cidrBlock: "10.0.0.0/16",
 			tags: [{key: "Name", value: `vpc-${environment}`}]
 		})
@@ -29,13 +32,13 @@ interface ISubnet {
 }
 
 class Subnet {
-	public subnet: ec2.CfnSubnet;
-	private readonly vpc: ec2.CfnVPC;
+	public subnet: aws_ec2.CfnSubnet;
+	private readonly vpc: aws_ec2.CfnVPC;
 
-	constructor(scope: cdk.Construct, vpc: ec2.CfnVPC, props: ISubnet) {
+	constructor(scope: Construct, vpc: aws_ec2.CfnVPC, props: ISubnet) {
 		this.vpc = vpc
 		const id = `${props.name}-${props.availabilityZone}-${props.environment}`
-		this.subnet = new ec2.CfnSubnet(scope, id, {
+		this.subnet = new aws_ec2.CfnSubnet(scope, id, {
 			cidrBlock: props.cidrBlock,
 			vpcId: this.vpc.ref,
 			availabilityZone: props.availabilityZone,
@@ -45,16 +48,16 @@ class Subnet {
 }
 
 class InternetGateway {
-	public igw: ec2.CfnInternetGateway;
-	private readonly vpc: ec2.CfnVPC;
+	public igw: aws_ec2.CfnInternetGateway;
+	private readonly vpc: aws_ec2.CfnVPC;
 
-	constructor(scope: cdk.Construct, vpc: ec2.CfnVPC) {
+	constructor(scope: Construct, vpc: aws_ec2.CfnVPC) {
 		this.vpc = vpc
-		this.igw = new ec2.CfnInternetGateway(scope, "internet-gateway", {
+		this.igw = new aws_ec2.CfnInternetGateway(scope, "internet-gateway", {
 			tags: [{key: "Name", value: "internetGateway"}]
 		})
 
-		new CfnVPCGatewayAttachment(scope, "vpc-gateway-attachment", {
+		new aws_ec2.CfnVPCGatewayAttachment(scope, "vpc-gateway-attachment", {
 			vpcId: this.vpc.ref,
 			internetGatewayId: this.igw.ref
 		})
@@ -68,10 +71,10 @@ interface IElasticIp {
 }
 
 class ElasticIp {
-	public eip: ec2.CfnEIP;
+	public eip: aws_ec2.CfnEIP;
 
-	constructor(scope: cdk.Construct, props: IElasticIp) {
-		this.eip = new ec2.CfnEIP(scope, `eip-${props.name}-${props.availabilityZone}-${props.environment}`, {
+	constructor(scope: Construct, props: IElasticIp) {
+		this.eip = new aws_ec2.CfnEIP(scope, `eip-${props.name}-${props.availabilityZone}-${props.environment}`, {
 			domain: "vpc",
 			tags: [{key: "Name", value: `${props.name}-${props.availabilityZone}-${props.environment}`}]
 		})
@@ -86,16 +89,16 @@ interface INatGateway {
 }
 
 class NatGateway {
-	public ngw: ec2.CfnNatGateway;
+	public ngw: aws_ec2.CfnNatGateway;
 
-	private readonly publicSubnet: ec2.CfnSubnet;
-	private readonly eip: ec2.CfnEIP;
+	private readonly publicSubnet: aws_ec2.CfnSubnet;
+	private readonly eip: aws_ec2.CfnEIP;
 
-	constructor(scope: cdk.Construct, publicSubnet: ec2.CfnSubnet, eip: ec2.CfnEIP, props: INatGateway) {
+	constructor(scope: Construct, publicSubnet: aws_ec2.CfnSubnet, eip: aws_ec2.CfnEIP, props: INatGateway) {
 		this.publicSubnet = publicSubnet
 		this.eip = eip
 
-		this.ngw = new ec2.CfnNatGateway(scope, `ngw-${props.name}-${props.availabilityZone}-${props.environment}`, {
+		this.ngw = new aws_ec2.CfnNatGateway(scope, `ngw-${props.name}-${props.availabilityZone}-${props.environment}`, {
 			allocationId: this.eip.attrAllocationId,
 			subnetId: this.publicSubnet.ref,
 			tags: [{key: "Name", value: `ngw-${props.name}-${props.availabilityZone}-${props.environment}`}]
@@ -104,8 +107,8 @@ class NatGateway {
 }
 
 
-export class VpcStack extends cdk.Stack {
-	constructor(app: cdk.App, id: string, params: IBasicVpc, props?: cdk.StackProps) {
+export class VpcStack extends Stack {
+	constructor(app: Construct, id: string, params: IBasicVpc, props?: StackProps) {
 		super(app, id, props);
 
 		const vpc = new Vpc(this, params.environment)
@@ -170,64 +173,64 @@ export class VpcStack extends cdk.Stack {
 		})
 
 		// public route table
-		const publicRouteTable = new ec2.CfnRouteTable(this, "rtb-public", {
+		const publicRouteTable = new aws_ec2.CfnRouteTable(this, "rtb-public", {
 			vpcId: vpc.vpc.ref,
 			tags: [{key: "Name", value: "rtb-public"}]
 		})
-		new ec2.CfnRoute(this, "public-route", {
+		new aws_ec2.CfnRoute(this, "public-route", {
 			routeTableId: publicRouteTable.ref,
 			destinationCidrBlock: "0.0.0.0/0",
 			gatewayId: igw.igw.ref
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1a", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1a", {
 			routeTableId: publicRouteTable.ref,
 			subnetId: public1a.subnet.ref
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1c", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "public-subnet1c", {
 			routeTableId: publicRouteTable.ref,
 			subnetId: public1c.subnet.ref
 		})
 
 		// app1a route table
-		const rtbApp1a = new ec2.CfnRouteTable(this, "rtb-app-1a", {
+		const rtbApp1a = new aws_ec2.CfnRouteTable(this, "rtb-app-1a", {
 			vpcId: vpc.vpc.ref,
 			tags: [{key: "Name", value: "rtb-app-1a"}]
 		})
-		new ec2.CfnRoute(this, "app-1a-route", {
+		new aws_ec2.CfnRoute(this, "app-1a-route", {
 			routeTableId: rtbApp1a.ref,
 			destinationCidrBlock: "0.0.0.0/0",
 			natGatewayId: ngw1a.ngw.ref
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "app-1a-subnet1a", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "app-1a-subnet1a", {
 			routeTableId: rtbApp1a.ref,
 			subnetId: app1a.subnet.ref
 		})
 
 		// app1a route table
-		const rtbApp1c = new ec2.CfnRouteTable(this, "rtb-app-1c", {
+		const rtbApp1c = new aws_ec2.CfnRouteTable(this, "rtb-app-1c", {
 			vpcId: vpc.vpc.ref,
 			tags: [{key: "Name", value: "rtb-app-1c"}]
 		})
-		new ec2.CfnRoute(this, "app-1c-route", {
+		new aws_ec2.CfnRoute(this, "app-1c-route", {
 			routeTableId: rtbApp1c.ref,
 			destinationCidrBlock: "0.0.0.0/0",
 			natGatewayId: ngw1c.ngw.ref
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "app-1c-subnet1a", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "app-1c-subnet1a", {
 			routeTableId: rtbApp1c.ref,
 			subnetId: app1c.subnet.ref
 		})
 
 		// db route table
-		const rtbDb = new ec2.CfnRouteTable(this, "rtb-db", {
+		const rtbDb = new aws_ec2.CfnRouteTable(this, "rtb-db", {
 			vpcId: vpc.vpc.ref,
 			tags: [{key: "Name", value: "rtb-db"}]
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "db-db-1a", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "db-db-1a", {
 			routeTableId: rtbDb.ref,
 			subnetId: db1a.subnet.ref
 		})
-		new ec2.CfnSubnetRouteTableAssociation(this, "db-db-1c", {
+		new aws_ec2.CfnSubnetRouteTableAssociation(this, "db-db-1c", {
 			routeTableId: rtbDb.ref,
 			subnetId: db1c.subnet.ref
 		})
