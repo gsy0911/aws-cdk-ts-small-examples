@@ -6,8 +6,8 @@ If you'd like to find python example, check [this repository](https://github.com
 
 ## Environment
 
-- [![macOS](https://img.shields.io/badge/macOS_BigSur-11.5-green.svg)]()
-- [![cdk-version](https://img.shields.io/badge/aws_cdk-1.116.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
+- [![macOS](https://img.shields.io/badge/macOS_Monterey-12.1-green.svg)]()
+- [![cdk-version](https://img.shields.io/badge/aws_cdk-2.2.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
 - [![NodeVersion](https://img.shields.io/badge/node-16.5.0-blue.svg)](https://nodejs.org/ja/)
 
 # TypeScript examples
@@ -29,23 +29,6 @@ finally, you should destroy everything.
 ```
 $ cdk destroy {target_name}
 ```
-
-
-## Contents
-
-| Example | Description |
-|:---:|:---:|
-| [aws-config](./examples/aws-config) | Add AWS Config |
-| [aws-security-automation](./examples/aws-security-automation) | - |
-| [batch-log-sfn](./examples/batch-log-sfn) | AWS Batch and StepFunctions. |
-| [cloudtrail](./examples/cloudtrail) | Add CloudTrail |
-| [codepipeline-eb-blue-green-deploy](./examples/codepipeline-eb-blue-green-deploy) | Create CI/CD flow with CodePipeline, CodeBuild for ElasticBeanstalk. |
-| [ec2-ismv2](./examples/ec2-ismv2) | Add new VPC and EC2 with SSM |
-| [ecs-fargate](./examples/ecs-fargate) | Add ECS Fargate execution environment, multiple patterns. |
-| [event-bridge-triggered-pipeline](./examples/event-bridge-triggered-pipeline) | EventBridge-triggered pipeline to deploy ECS + Fargate from GitHub. It is recommended to use the example with `ecs-fargate` |
-| [guardduty-lambda](./examples/guardduty-lambda) | Add chatbot to notify slack, and add lambda to be used as IPS. |
-| [http-proxy-apigateway](./examples/http-proxy-apigateway) | copy from origin. |
-| [streamlit-stack](./examples/streamlit-stack) | simple streamlit on ECS Fargate, including Cognito. |
 
 
 # References
