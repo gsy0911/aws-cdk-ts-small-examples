@@ -16,12 +16,14 @@ export interface IS3ObjectLambda {
 	bucketName: string
 	accessPointName: string
 	accessPointPrefix: string
+	objectLambdaAccessPointName: string
 }
 
 export const defaultS3ObjectLambdaParams: IS3ObjectLambda = {
 	bucketName: "s3-object-lambda-cdk-example-test",
 	accessPointName: "ap-cdk-example",
-	accessPointPrefix: "prefix"
+	accessPointPrefix: "prefix",
+	objectLambdaAccessPointName: "access-point"
 }
 
 export class S3ObjectLambdaStack extends Stack {
@@ -49,6 +51,8 @@ export class S3ObjectLambdaStack extends Stack {
 				}
 			})
 		)
+		const arnAccessPoint = `arn:aws:s3:${Aws.REGION}:${Aws.ACCOUNT_ID}:accesspoint/${params.accessPointName}`
+		const arnObjectLambdaAccessPoint = `arn:aws:s3-object-lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:accesspoint/${params.objectLambdaAccessPointName}`
 
 		/** lambda role */
 		const role = new aws_iam.Role(this, 'lambdaRole', {
@@ -61,8 +65,12 @@ export class S3ObjectLambdaStack extends Stack {
 					statements: [
 						new aws_iam.PolicyStatement({
 							effect: aws_iam.Effect.ALLOW,
-							resources: [s3ObjectTarget.bucketArn, s3ObjectTarget.arnForObjects("*")],
+							resources: [
+								`${arnAccessPoint}/*`,
+								arnObjectLambdaAccessPoint
+							],
 							actions: [
+								's3:GetObject',
 								's3-object-lambda:WriteGetObjectResponse',
 							]
 						})
@@ -82,9 +90,9 @@ export class S3ObjectLambdaStack extends Stack {
 		})
 
 		const s3ObjectAccessPoint = new aws_s3objectlambda.CfnAccessPoint(this, "s3ObjectAccessPoint", {
-			name: "access-point",
+			name: params.objectLambdaAccessPointName,
 			objectLambdaConfiguration: {
-				supportingAccessPoint: `arn:aws:s3:${Aws.REGION}:${Aws.ACCOUNT_ID}:accesspoint/${params.accessPointName}`,
+				supportingAccessPoint: arnAccessPoint,
 				transformationConfigurations: [{
 					actions: ["GetObject"],
 					contentTransformation: {
@@ -107,7 +115,7 @@ export class S3ObjectLambdaStack extends Stack {
 		                ]
 		            },
 		            "Action": ["s3:GetObject", "s3:PutObject"],
-		            "Resource": `arn:aws:s3:${Aws.REGION}:${Aws.ACCOUNT_ID}:accesspoint/${params.accessPointName}/object/${params.accessPointPrefix}/*`
+		            "Resource": `${arnAccessPoint}/object/${params.accessPointPrefix}/*`
 		        }
 		    ]
 		}
