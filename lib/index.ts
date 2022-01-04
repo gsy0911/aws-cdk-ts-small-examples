@@ -46,6 +46,9 @@ export {VpcEc2Stack} from './VpcEc2Stack';
 // GaurdDuty
 export {GuardDutyLambdaStack, IGuardDutyLambda, defaultGuardDutyLambdaParams} from './GuarddutyLambda';
 
+// S3 Object Lambda
+export {S3ObjectLambdaStack, IS3ObjectLambda, defaultS3ObjectLambdaParams} from './S3ObjectLambdaStack';
+
 // env
 export interface IEnv {
     /** 12 digits */
