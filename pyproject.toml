@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws-cdk-ts-small-examples"
-version = "0.1.0"
+version = "0.1.5"
 description = ""
 authors = ["gsy0911 <yoshiki0911@gmail.com>"]
 
@@ -32,6 +32,9 @@ exclude = """
     | docs
     | htmlcov
     | notebook
+    | cdk.out
+    | node_modules
+    | test
 /)
 """
 
