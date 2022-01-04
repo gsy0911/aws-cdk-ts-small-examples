@@ -1,3 +1,3 @@
 def handler(event, _):
-	print(event)
-	return {"date": "a"}
+    print(event)
+    return {"date": "a"}
