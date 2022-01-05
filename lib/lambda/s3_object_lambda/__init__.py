@@ -1,13 +1,42 @@
+from io import BytesIO
 import json
-from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote
+import urllib.parse
 
 import boto3
+import pandas as pd
 
 s3_client = boto3.client("s3")
+s3_resource = boto3.resource("s3")
 
 
-def lambda_handler(event, context):
+def _decode_json(supporting_access_point_arn: str, s3_key: str, query_param: dict):
+    # To get the original object from S3,use the supporting_access_point_arn
+    s3_obj = s3_resource.Object(supporting_access_point_arn, s3_key).get()
+    src_text = s3_obj["Body"].read()
+    src_text = src_text.decode("utf-8")
+
+    # data
+    data = json.loads(src_text)
+    print(f"data: {data}")
+    filtered_list = []
+    for k, v in query_param.items():
+        filtered_list.extend([d for d in data["data"] if d[k] == v[0]])
+    filtered = {"filtered": filtered_list}
+    print(f"filtered: {filtered}")
+    return json.dumps(filtered).encode("utf-8")
+
+
+def _decode_csv(supporting_access_point_arn: str, s3_key: str, query_param: dict):
+    # To get the original object from S3,use the supporting_access_point_arn
+    s3_obj = s3_resource.Object(supporting_access_point_arn, s3_key).get()
+    df = pd.read_csv(BytesIO(s3_obj["Body"].read()), encoding="cp932")
+    for k, v in query_param.items():
+        df = df[df[k] == v[0]]
+    return df.to_csv(encoding="utf-8", index=False)
+
+
+def lambda_handler(event, _):
     print(f"event: {event}")
     # Extract the outputRoute and outputToken from the object context
     object_context = event["getObjectContext"]
@@ -22,32 +51,22 @@ def lambda_handler(event, context):
     print(f"supporting_access_point_arn: {supporting_access_point_arn}")
 
     user_request_url = unquote(user_request_url)
-    result = user_request_url.split("#")
-    user_request_url = result[0]
-    if len(result) > 1:
-        target_color = result[1]
-    else:
-        target_color = "red"
-
-    # Extract the S3 Object Key from the user requested URL
-    s3_key = str(Path(urlparse(user_request_url).path).relative_to("/"))
+    decoded = urllib.parse.urlparse(user_request_url)
+    path = s3_key = decoded.path[1:]
+    qs = decoded.query
+    qs_d = urllib.parse.parse_qs(qs)
+    print(f"path=s3_key: {path}, qs_d: {qs_d}")
 
     # Get the original object from S3
-    s3 = boto3.resource("s3")
-
-    # To get the original object from S3,use the supporting_access_point_arn
-    s3_obj = s3.Object(supporting_access_point_arn, s3_key).get()
-    src_text = s3_obj["Body"].read()
-    src_text = src_text.decode("utf-8")
-
-    # data
-    data = json.loads(src_text)
-    print(f"data: {data}")
-    filtered = {"filtered": [d for d in data["data"] if d["color"] == target_color]}
-    print(f"filtered: {filtered}")
+    if s3_key.endswith(".json"):
+        data = _decode_json(supporting_access_point_arn=supporting_access_point_arn, s3_key=s3_key, query_param=qs_d)
+    elif s3_key.endswith(".csv"):
+        data = _decode_csv(supporting_access_point_arn=supporting_access_point_arn, s3_key=s3_key, query_param=qs_d)
+    else:
+        raise ValueError()
 
     response = s3_client.write_get_object_response(
-        Body=json.dumps(filtered).encode("utf-8"), RequestRoute=request_route, RequestToken=request_token
+        Body=data, RequestRoute=request_route, RequestToken=request_token
     )
 
     return response
