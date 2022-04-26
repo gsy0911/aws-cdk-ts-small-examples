@@ -49,6 +49,9 @@ export {GuardDutyLambdaStack, IGuardDutyLambda, defaultGuardDutyLambdaParams} fr
 // S3 Object Lambda
 export {S3ObjectLambdaStack, IS3ObjectLambda, defaultS3ObjectLambdaParams} from './S3ObjectLambdaStack';
 
+// OIDC
+export {OidcStack, oidcStackProps} from './OIDC';
+
 // env
 export interface IEnv {
     /** 12 digits */
