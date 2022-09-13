@@ -34,4 +34,7 @@ new examples.SamExampleStack(app, "SamExampleStack", examples.samExampleParams, 
 // S3 Object Lambda
 new examples.S3ObjectLambdaStack(app, "S3ObjectLambdaStack", examples.defaultS3ObjectLambdaParams, props)
 
+// OIDC
+new examples.OidcStack(app, "OidcStack", examples.oidcStackProps)
+
 app.synth();

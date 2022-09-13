@@ -6,9 +6,9 @@ If you'd like to find python example, check [this repository](https://github.com
 
 ## Environment
 
-- [![macOS](https://img.shields.io/badge/macOS_Monterey-12.1-green.svg)]()
-- [![cdk-version](https://img.shields.io/badge/aws_cdk-2.2.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
-- [![NodeVersion](https://img.shields.io/badge/node-16.5.0-blue.svg)](https://nodejs.org/ja/)
+- [![macOS](https://img.shields.io/badge/macOS_Monterey-12.6-green.svg)]()
+- [![cdk-version](https://img.shields.io/badge/aws_cdk-2.41.0-green.svg)](https://formulae.brew.sh/formula/aws-cdk)
+- [![NodeVersion](https://img.shields.io/badge/node-16.15.0-blue.svg)](https://nodejs.org/ja/)
 
 # TypeScript examples
 
