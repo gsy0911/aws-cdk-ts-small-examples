@@ -1,6 +1,6 @@
 {
 	"name": "aws-cdk-ts-small-examples",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "contains a set of TypeScript example projects for the AWS Cloud Development Kit.",
 	"bin": {
 		"example": "bin/index.js"
