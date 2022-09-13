@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws-cdk-ts-small-examples"
-version = "0.1.5"
+version = "0.1.6"
 description = ""
 authors = ["gsy0911 <yoshiki0911@gmail.com>"]
 
