@@ -24,12 +24,12 @@ export class VpcRdsStack extends Stack {
 					cidrMask: 24
 				},
 				{
-					subnetType: aws_ec2.SubnetType.PRIVATE,
+					subnetType: aws_ec2.SubnetType.PRIVATE_WITH_EGRESS,
 					name: "application",
 					cidrMask: 24
 				},
 				{
-					subnetType: aws_ec2.SubnetType.ISOLATED,
+					subnetType: aws_ec2.SubnetType.PRIVATE_ISOLATED,
 					name: "database",
 					cidrMask: 28
 				}
@@ -65,7 +65,7 @@ export class RdsEc2AccessStack extends Stack {
 				},
 				{
 					name: "subnet-private",
-					subnetType: aws_ec2.SubnetType.PRIVATE,
+					subnetType: aws_ec2.SubnetType.PRIVATE_WITH_EGRESS,
 					cidrMask: 28,
 				}
 
@@ -111,7 +111,7 @@ export class RdsEc2AccessStack extends Stack {
 			}),
 			instanceType: aws_ec2.InstanceType.of(aws_ec2.InstanceClass.BURSTABLE2, aws_ec2.InstanceSize.MICRO),
 			vpcSubnets: {
-				subnetType: aws_ec2.SubnetType.PRIVATE
+				subnetType: aws_ec2.SubnetType.PRIVATE_WITH_EGRESS
 			},
 			databaseName: "cdkexample",
 			removalPolicy: RemovalPolicy.DESTROY,
@@ -137,7 +137,7 @@ export class RdsEc2IamAccessStack extends Stack {
 				},
 				{
 					name: "subnet-private",
-					subnetType: aws_ec2.SubnetType.PRIVATE,
+					subnetType: aws_ec2.SubnetType.PRIVATE_WITH_EGRESS,
 					cidrMask: 28,
 				}
 
